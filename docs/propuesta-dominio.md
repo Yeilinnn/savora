@@ -1,6 +1,6 @@
 # Propuesta de Dominio
 
-Laboratorio 1 · EIF509 · II Ciclo 2026
+Laboratorio 1 y 2 · EIF509 · II Ciclo 2026
 
 **Savora**
 
@@ -37,6 +37,8 @@ Savora es una plataforma que permite a estos negocios publicar "paquetes sorpres
 - **Reserva:** vínculo entre un cliente y un paquete que aparta. Datos: fecha y hora de reserva, estado (pendiente, recogido, no recogido).
 - **Categoría:** clasificación del tipo de comida del paquete (panadería, comida preparada, frutas y verduras, otros).
 - **OrganizaciónComunitaria:** comedor u ONG que puede recibir donaciones. Datos: nombre, tipo, capacidad de recolección, contacto.
+- **PerfilImpacto:** historial de impacto de un cliente o de un negocio, con un sistema de insignias. Datos: kilogramos rescatados, reservas recogidas, reservas no recogidas, paquetes donados, paquetes perdidos, insignias obtenidas. Se implementa en MongoDB (Laboratorio 2); ver "Subdominio documental" más abajo.
+- **Reseña:** calificación que un cliente deja sobre un paquete que recogió. Datos: calificación (1 a 5), comentario, fecha. Vive en MongoDB, igual que PerfilImpacto.
 
 ### Relaciones entre entidades
 
@@ -45,10 +47,19 @@ Savora es una plataforma que permite a estos negocios publicar "paquetes sorpres
 - Un Cliente realiza muchas Reservas.
 - Una Reserva corresponde exactamente a un PaqueteSorpresa.
 - Un PaqueteSorpresa no reservado antes de su hora límite puede asignarse a una OrganizaciónComunitaria como donación.
+- Un Cliente y un Negocio tienen, cada uno, un PerfilImpacto asociado por referencia de id (no es llave foránea real: viven en bases de datos distintas).
+- Un Cliente deja muchas Reseñas.
+- Una Reseña califica un PaqueteSorpresa recogido.
 
-### Subdominio documental candidato
+### Subdominio documental
 
-El historial de impacto de cada negocio y cliente (kilogramos de comida rescatados, número de donaciones realizadas, bitácora de paquetes por día) es información flexible y de crecimiento variable, más parecida a un documento que a un registro rígido. Se identifica aquí como candidata para modelarse en MongoDB en el Laboratorio 2.
+El historial de impacto de cada negocio y cliente (kilogramos de comida rescatados, número de donaciones realizadas, reservas cumplidas) y las reseñas que un cliente deja sobre un paquete recogido son información flexible y de crecimiento variable, más parecida a un documento que a un registro rígido. Ambas entidades viven en MongoDB.
+
+`PerfilImpacto` está implementado (Laboratorio 2), con un sistema de insignias que además influye en reglas de negocio existentes: el límite de reservas activas de un cliente confiable sube, y un negocio con buen historial de donaciones gana mejor posicionamiento en el catálogo.
+
+`Reseña` está definida en el modelo — calificación, comentario y fecha, asociada a un cliente y a un paquete — pero todavía no tiene código (ni clase, ni repositorio, ni endpoint).
+
+Modelo completo, criterios de diseño e insignias definidas en [`modelo-datos-lab2.md`](modelo-datos-lab2.md).
 
 ## 4 · Procesos de negocio
 
@@ -70,6 +81,16 @@ Al llegar la hora límite de un PaqueteSorpresa que no fue reservado por ningún
 - **Cálculos:** se actualiza el acumulado de kilogramos de comida rescatados del negocio y, si aplica, de la organización receptora, para efectos de reportes de impacto.
 - **Validaciones:** se valida que la organización tenga capacidad de recolección disponible y que el paquete no haya sido reservado por un cliente mientras se procesaba la asignación (evitar condición de carrera entre una reserva de último minuto y el cierre automático).
 
+### Proceso 3: Actualización del historial de impacto
+
+Cada vez que se cierra el ciclo de una Reserva o de un PaqueteSorpresa, el sistema actualiza el PerfilImpacto del cliente o del negocio correspondiente, y evalúa si corresponde otorgar una insignia nueva.
+
+- **Reglas:** cuando un cliente recoge una reserva, se incrementa su contador de reservas recogidas y se evalúan las insignias PRIMER_RESCATE y GUARDIAN_DEL_BARRIO; cuando no la recoge, se incrementa su contador de no recogidas. Cuando un negocio dona un paquete, se incrementa su contador de donados y se evalúa CERO_DESPERDICIO; cuando el paquete se pierde, se incrementa su contador de perdidos.
+- **Cálculos:** el límite de reservas activas de un cliente se recalcula a partir del ratio de reservas recogidas contra no recogidas: un cliente con al menos 10 reservas recogidas y un ratio de al menos 90% sube su límite de 3 a 5.
+- **Validaciones:** una insignia nunca se otorga dos veces al mismo dueño.
+
+Este proceso vive completo en MongoDB — no participa en las transacciones de PostgreSQL del Proceso 1 ni del Proceso 2.
+
 ## 5 · Alcance
 
 ### Dentro del alcance
@@ -78,6 +99,8 @@ Al llegar la hora límite de un PaqueteSorpresa que no fue reservado por ningún
 - Reserva de paquetes por parte de clientes, con control de disponibilidad y hora límite.
 - Asignación de paquetes no reservados a organizaciones comunitarias registradas.
 - Historial de compras del cliente e indicador de comida "salvada".
+- Historial de impacto con insignias, que afecta el límite de reservas del cliente y el posicionamiento del negocio en el catálogo.
+- Reseñas de paquetes recogidos, como parte del historial de impacto del negocio.
 - Gestión básica de negocios, categorías y organizaciones comunitarias.
 
 ### Fuera del alcance
