@@ -37,6 +37,7 @@ Savora es una plataforma que permite a estos negocios publicar "paquetes sorpres
 - **Reserva:** vínculo entre un cliente y un paquete que aparta. Datos: fecha y hora de reserva, estado (pendiente, recogido, no recogido).
 - **Categoría:** clasificación del tipo de comida del paquete (panadería, comida preparada, frutas y verduras, otros).
 - **OrganizaciónComunitaria:** comedor u ONG que puede recibir donaciones. Datos: nombre, tipo, capacidad de recolección, contacto.
+- **Donacion:** registro de que un PaqueteSorpresa fue asignado a una OrganizaciónComunitaria. Datos: fecha de donación, estado (pendiente, aceptada, rechazada).
 - **PerfilImpacto:** historial de impacto de un cliente o de un negocio, con un sistema de insignias. Datos: kilogramos rescatados, reservas recogidas, reservas no recogidas, paquetes donados, paquetes perdidos, insignias obtenidas. Se implementa en MongoDB (Laboratorio 2); ver "Subdominio documental" más abajo.
 - **Reseña:** calificación que un cliente deja sobre un paquete que recogió. Datos: calificación (1 a 5), comentario, fecha. Vive en MongoDB, igual que PerfilImpacto.
 
@@ -46,7 +47,8 @@ Savora es una plataforma que permite a estos negocios publicar "paquetes sorpres
 - Un PaqueteSorpresa pertenece a una Categoría.
 - Un Cliente realiza muchas Reservas.
 - Una Reserva corresponde exactamente a un PaqueteSorpresa.
-- Un PaqueteSorpresa no reservado antes de su hora límite puede asignarse a una OrganizaciónComunitaria como donación.
+- Un PaqueteSorpresa no reservado antes de su hora límite puede asignarse a una Donacion, si alguna OrganizaciónComunitaria acepta recibirlo.
+- Una Donacion pertenece a una OrganizaciónComunitaria.
 - Un Cliente y un Negocio tienen, cada uno, un PerfilImpacto asociado por referencia de id (no es llave foránea real: viven en bases de datos distintas).
 - Un Cliente deja muchas Reseñas.
 - Una Reseña califica un PaqueteSorpresa recogido.
@@ -77,7 +79,7 @@ Este proceso involucra varios cambios que deben ocurrir todos juntos o ninguno: 
 
 Al llegar la hora límite de un PaqueteSorpresa que no fue reservado por ningún cliente, el sistema evalúa si puede asignarse como donación.
 
-- **Reglas:** un paquete no reservado se ofrece primero a las organizaciones comunitarias registradas con capacidad de recolección disponible en ese horario; si ninguna acepta, el paquete se marca como "perdido".
+- **Reglas:** un paquete no reservado se ofrece primero a las organizaciones comunitarias registradas con capacidad de recolección disponible en ese horario; si ninguna acepta, el paquete se marca como "perdido". Cuando una organización acepta, se crea una Donacion con estado "aceptada"; si se le ofreció a una organización y rechazó, queda "rechazada" antes de intentar con la siguiente.
 - **Cálculos:** se actualiza el acumulado de kilogramos de comida rescatados del negocio y, si aplica, de la organización receptora, para efectos de reportes de impacto.
 - **Validaciones:** se valida que la organización tenga capacidad de recolección disponible y que el paquete no haya sido reservado por un cliente mientras se procesaba la asignación (evitar condición de carrera entre una reserva de último minuto y el cierre automático).
 

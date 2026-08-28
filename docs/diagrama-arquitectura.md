@@ -73,7 +73,8 @@ erDiagram
     Categoria ||--o{ PaqueteSorpresa : clasifica
     Cliente ||--o{ Reserva : realiza
     PaqueteSorpresa ||--o| Reserva : "tiene como máximo una"
-    OrganizacionComunitaria ||--o{ PaqueteSorpresa : "puede recibir donación"
+    PaqueteSorpresa ||--o| Donacion : "puede tener"
+    OrganizacionComunitaria ||--o{ Donacion : recibe
     Cliente ||--o| PerfilImpacto : "referencia por id (Mongo, no es FK real)"
     Negocio ||--o| PerfilImpacto : "referencia por id (Mongo, no es FK real)"
     Cliente ||--o{ Resena : deja
@@ -115,6 +116,11 @@ erDiagram
         string tipo
         int capacidadRecoleccion
         string contacto
+    }
+
+    Donacion {
+        datetime fechaDonacion
+        string estado "pendiente, aceptada o rechazada"
     }
 
     PerfilImpacto {

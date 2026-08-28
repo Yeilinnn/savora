@@ -45,8 +45,9 @@ El núcleo transaccional de Savora vive en **PostgreSQL**: clientes, negocios, p
 
 - **V1** — tablas base: categoria, negocio, cliente, organizacion_comunitaria
 - **V2** — núcleo transaccional: paquete_sorpresa, reserva
-- **V3** — índices justificados: FK que se consultan seguido (`negocio_id`, `categoria_id`, `organizacion_comunitaria_id` en `paquete_sorpresa`; `cliente_id` en `reserva`) y un índice parcial sobre `paquete_sorpresa.estado` para el catálogo público (`WHERE estado = 'disponible'`)
+- **V3** — índices justificados: FK que se consultan seguido (`negocio_id`, `categoria_id` en `paquete_sorpresa`; `cliente_id` en `reserva`) y un índice parcial sobre `paquete_sorpresa.estado` para el catálogo público (`WHERE estado = 'disponible'`)
 - **V4** — datos de ejemplo (seeds) en las 6 tablas relacionales
+- **V5** — extrae la donación como entidad propia: tabla `donacion` (fecha, estado, referencia a la organización), y le quita a `paquete_sorpresa` la columna suelta que tenía antes. Índice en `donacion.organizacion_comunitaria_id`.
 
 ## Subdominio MongoDB
 
