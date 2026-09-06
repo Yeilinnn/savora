@@ -1,6 +1,7 @@
 package cr.ac.una.savora.data;
 
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.CompoundIndex;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.math.BigDecimal;
@@ -8,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Document(collection = "perfil_impacto")
+@CompoundIndex(name = "uq_propietario_tipo", def = "{'propietarioId': 1, 'tipoPropietario': 1}", unique = true)
 public class PerfilImpacto {
 
     @Id
