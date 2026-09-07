@@ -1,13 +1,8 @@
 package cr.ac.una.savora.data;
 
-import org.springframework.stereotype.Repository;
+import java.util.Optional;
 
-import java.util.List;
+public interface CategoriaRepository extends RepositorioBase<Categoria, Long> {
 
-@Repository
-public class CategoriaRepository {
-
-    public List<String> findAll() {
-        return List.of("Panadería", "Comida preparada", "Frutas y verduras");
-    }
+    Optional<Categoria> findByNombre(String nombre);
 }

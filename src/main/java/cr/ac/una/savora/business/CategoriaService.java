@@ -1,5 +1,6 @@
 package cr.ac.una.savora.business;
 
+import cr.ac.una.savora.data.Categoria;
 import cr.ac.una.savora.data.CategoriaRepository;
 import org.springframework.stereotype.Service;
 
@@ -15,6 +16,8 @@ public class CategoriaService {
     }
 
     public List<String> obtenerCategorias() {
-        return categoriaRepository.findAll();
+        return categoriaRepository.findAll().stream()
+                .map(Categoria::getNombre)
+                .toList();
     }
 }
