@@ -23,6 +23,7 @@ El núcleo transaccional de Savora vive en **PostgreSQL**: clientes, negocios, p
 | `organizacion_comunitaria` | Comedores u ONG que reciben donaciones |
 | `paquete_sorpresa` | Excedente publicado por un negocio |
 | `reserva` | Vínculo entre cliente y paquete reservado |
+| `donacion` | Asignación de un paquete no reservado a una organización |
 
 ### Relaciones
 
@@ -30,9 +31,11 @@ El núcleo transaccional de Savora vive en **PostgreSQL**: clientes, negocios, p
 - Un `paquete_sorpresa` pertenece a una `categoria`.
 - Un `cliente` realiza muchas `reserva`.
 - Una `reserva` corresponde a un solo `paquete_sorpresa`.
-- Un `paquete_sorpresa` donado referencia a `organizacion_comunitaria`.
+- Un `paquete_sorpresa` donado genera una `donacion` hacia `organizacion_comunitaria`.
 
-**Nota:** el "historial de compras" del cliente (mencionado en la propuesta de dominio) no es una columna de `cliente` — se obtiene consultando `reserva` filtrado por `cliente_id`. Guardarlo aparte duplicaría datos que ya viven en `reserva`, violando 3FN.
+### Normalización (3FN)
+
+Las tablas base no repiten datos de sus dependientes: el correo del cliente vive solo en `cliente`, el tipo de comida solo en `categoria`, y cada paquete referencia esas tablas por FK. El historial de compras tampoco se guarda en `cliente`; se obtiene consultando `reserva` por `cliente_id`. Duplicarlo en otra tabla introduciría redundancia y haría difícil mantener consistencia cuando cambia el estado de una reserva.
 
 ### Restricciones de negocio
 
@@ -45,9 +48,25 @@ El núcleo transaccional de Savora vive en **PostgreSQL**: clientes, negocios, p
 
 - **V1** — tablas base: categoria, negocio, cliente, organizacion_comunitaria
 - **V2** — núcleo transaccional: paquete_sorpresa, reserva
-- **V3** — índices justificados: FK que se consultan seguido (`negocio_id`, `categoria_id` en `paquete_sorpresa`; `cliente_id` en `reserva`) y un índice parcial sobre `paquete_sorpresa.estado` para el catálogo público (`WHERE estado = 'disponible'`)
-- **V4** — datos de ejemplo (seeds) en las 6 tablas relacionales
-- **V5** — extrae la donación como entidad propia: tabla `donacion` (fecha, estado, referencia a la organización), y le quita a `paquete_sorpresa` la columna suelta que tenía antes. Índice en `donacion.organizacion_comunitaria_id`.
+- **V3** — índices sobre consultas frecuentes (detalle abajo)
+- **V4** — datos de ejemplo en las tablas relacionales
+- **V5** — tabla `donacion` como entidad propia (detalle abajo)
+
+#### Índices (V3)
+
+`idx_paquete_negocio` acelera el panel del negocio: al listar los paquetes que publicó un comercio, PostgreSQL filtra por `negocio_id` en casi toda consulta de administración.
+
+`idx_paquete_categoria` soporta el filtro del catálogo por tipo de comida. Sin índice, cada búsqueda por categoría recorrería la tabla completa de paquetes.
+
+`idx_reserva_cliente` optimiza el historial de compras y el conteo de reservas activas de un cliente, operaciones centrales del proceso de reserva.
+
+`idx_paquete_disponible` es parcial (`WHERE estado = 'disponible'`) porque el catálogo público solo muestra paquetes abiertos a reserva. Indexar todos los estados ocuparía espacio en filas que casi nunca se consultan juntas.
+
+Los campos con UNIQUE (`cliente.correo`, `categoria.nombre`) ya traen índice implícito desde V1.
+
+#### Tabla donacion (V5)
+
+En V2 la donación era solo un estado del paquete más una FK suelta a la organización. Eso no permitía registrar cuándo se donó ni si la organización aceptó o rechazó. Al extraer `donacion` como tabla propia, el paquete conserva su ciclo de vida (`disponible`, `reservado`, `donado`, etc.) y la asignación a la ONG queda en un registro con `fecha_donacion` y `estado`, coherente con el proceso 2 de la propuesta de dominio. El índice en `organizacion_comunitaria_id` facilita consultar qué donaciones recibió cada comedor.
 
 ## Subdominio MongoDB
 
