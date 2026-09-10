@@ -26,6 +26,7 @@ EIF509 Desarrollo de Aplicaciones Basadas en Web · Universidad Nacional · II C
 - [Propuesta de dominio](docs/propuesta-dominio.md)
 - [Diagrama de arquitectura y decisión SQL/NoSQL](docs/diagrama-arquitectura.md)
 - [Modelo de datos — Laboratorio 2](docs/modelo-datos-lab2.md)
+- [Persistencia — Laboratorio 3](docs/persistencia-lab3.md)
 - [ADR-001: Versión de Spring Boot](docs/adr/ADR-001-version-spring-boot.md)
 
 ## Cómo levantar el proyecto
@@ -76,4 +77,4 @@ curl http://localhost:8080/actuator/health
 
 ## Estado del proyecto
 
-En desarrollo — Laboratorio 2: capa de datos completa (PostgreSQL + MongoDB).
+En desarrollo — Laboratorio 3: persistencia con JPA y repositorios.
