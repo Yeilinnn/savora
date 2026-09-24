@@ -8,10 +8,12 @@ public final class ReservaEspecificaciones {
     }
 
     public static Specification<Reserva> delCliente(Long clienteId) {
-        return (root, query, cb) -> cb.equal(root.get("cliente").get("id"), clienteId);
+        return (root, query, cb) ->
+                clienteId == null ? cb.conjunction() : cb.equal(root.get("cliente").get("id"), clienteId);
     }
 
     public static Specification<Reserva> conEstado(String estado) {
-        return (root, query, cb) -> cb.equal(root.get("estado"), estado);
+        return (root, query, cb) ->
+                estado == null ? cb.conjunction() : cb.equal(root.get("estado"), estado);
     }
 }

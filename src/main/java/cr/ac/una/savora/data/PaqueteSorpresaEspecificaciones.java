@@ -8,10 +8,12 @@ public final class PaqueteSorpresaEspecificaciones {
     }
 
     public static Specification<PaqueteSorpresa> conEstado(String estado) {
-        return (root, query, cb) -> cb.equal(root.get("estado"), estado);
+        return (root, query, cb) ->
+                estado == null ? cb.conjunction() : cb.equal(root.get("estado"), estado);
     }
 
     public static Specification<PaqueteSorpresa> deCategoria(Long categoriaId) {
-        return (root, query, cb) -> cb.equal(root.get("categoria").get("id"), categoriaId);
+        return (root, query, cb) ->
+                categoriaId == null ? cb.conjunction() : cb.equal(root.get("categoria").get("id"), categoriaId);
     }
 }
