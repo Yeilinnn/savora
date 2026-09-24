@@ -8,7 +8,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 
 import java.math.BigDecimal;
@@ -47,12 +46,6 @@ public class PaqueteSorpresa {
 
     @Column(nullable = false)
     private String estado;
-
-    @OneToOne(mappedBy = "paqueteSorpresa", fetch = FetchType.LAZY)
-    private Reserva reserva;
-
-    @OneToOne(mappedBy = "paqueteSorpresa", fetch = FetchType.LAZY)
-    private Donacion donacion;
 
     protected PaqueteSorpresa() {
     }
@@ -142,13 +135,5 @@ public class PaqueteSorpresa {
 
     public void setEstado(String estado) {
         this.estado = estado;
-    }
-
-    public Reserva getReserva() {
-        return reserva;
-    }
-
-    public Donacion getDonacion() {
-        return donacion;
     }
 }

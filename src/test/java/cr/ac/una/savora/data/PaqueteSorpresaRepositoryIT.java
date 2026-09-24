@@ -1,5 +1,7 @@
 package cr.ac.una.savora.data;
 
+import org.hibernate.SessionFactory;
+import org.hibernate.stat.Statistics;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -9,6 +11,7 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
+import jakarta.persistence.EntityManagerFactory;
 import java.time.OffsetDateTime;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -29,6 +32,9 @@ class PaqueteSorpresaRepositoryIT {
 
     @Autowired
     PaqueteSorpresaRepository paqueteSorpresaRepository;
+
+    @Autowired
+    EntityManagerFactory entityManagerFactory;
 
     @Test
     void listaPaquetesDisponiblesAntesDeLaHoraLimite() {
@@ -57,5 +63,31 @@ class PaqueteSorpresaRepositoryIT {
 
         assertThat(paquetes).hasSize(1);
         assertThat(paquetes.get(0).getDescripcion()).isEqualTo("Casado del día");
+    }
+
+    @Test
+    void filtraSoloPorEstadoCuandoCategoriaEsNula() {
+        var spec = PaqueteSorpresaEspecificaciones.conEstado("disponible")
+                .and(PaqueteSorpresaEspecificaciones.deCategoria(null));
+
+        var paquetes = paqueteSorpresaRepository.findAll(spec);
+
+        assertThat(paquetes).isNotEmpty();
+        assertThat(paquetes).allMatch(p -> p.getEstado().equals("disponible"));
+    }
+
+    @Test
+    void noProduceConsultasExtraAlTraerCategoriaConJoinFetch() {
+        SessionFactory sessionFactory = entityManagerFactory.unwrap(SessionFactory.class);
+        Statistics statistics = sessionFactory.getStatistics();
+        statistics.setStatisticsEnabled(true);
+        statistics.clear();
+
+        var paquetes = paqueteSorpresaRepository.findByNegocioIdConCategoria(1L);
+        // Fuerza el acceso a la relación: si no viniera cargada con el JOIN FETCH,
+        // aquí dispararía una consulta adicional por cada paquete (el N+1).
+        paquetes.forEach(p -> p.getCategoria().getNombre());
+
+        assertThat(statistics.getPrepareStatementCount()).isEqualTo(1);
     }
 }
