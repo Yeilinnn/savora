@@ -27,6 +27,7 @@ EIF509 Desarrollo de Aplicaciones Basadas en Web · Universidad Nacional · II C
 - [Diagrama de arquitectura y decisión SQL/NoSQL](docs/diagrama-arquitectura.md)
 - [Modelo de datos — Laboratorio 2](docs/modelo-datos-lab2.md)
 - [Persistencia — Laboratorio 3](docs/persistencia-lab3.md)
+- [Capa de negocio — Laboratorio 4](docs/negocio-lab4.md)
 - [ADR-001: Versión de Spring Boot](docs/adr/ADR-001-version-spring-boot.md)
 
 ## Cómo levantar el proyecto
@@ -49,7 +50,7 @@ cd savora
 docker compose up -d
 ```
 
-4. Compilá y corré las pruebas:
+4. Compilá, probá y verificá cobertura JaCoCo (≥ 70% en `business`):
 
 ```bash
 ./gradlew build
@@ -77,4 +78,4 @@ curl http://localhost:8080/actuator/health
 
 ## Estado del proyecto
 
-En desarrollo — Laboratorio 3: persistencia con JPA y repositorios.
+En desarrollo — Laboratorio 4: capa de negocio (`ReservaService`, `CierreDePaquetesService`), DTOs, excepciones de dominio, patrones State y Specification, pruebas Mockito y verificación de cobertura en CI. Detalle en [negocio-lab4.md](docs/negocio-lab4.md).
