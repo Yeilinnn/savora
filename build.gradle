@@ -19,6 +19,7 @@ repositories {
 }
 
 dependencies {
+	testImplementation 'org.testcontainers:mongodb:1.21.4'
 	implementation 'org.springframework.boot:spring-boot-starter-actuator'
 	implementation 'org.springframework.boot:spring-boot-starter-webmvc'
 	implementation 'org.springframework.boot:spring-boot-starter-flyway'

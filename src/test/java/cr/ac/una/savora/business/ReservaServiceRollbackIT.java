@@ -16,6 +16,7 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.testcontainers.containers.MongoDBContainer;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -35,11 +36,15 @@ class ReservaServiceRollbackIT {
     @Container
     static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16");
 
+    @Container
+    static MongoDBContainer mongo = new MongoDBContainer("mongo:7");
+
     @DynamicPropertySource
-    static void propiedadesDePostgres(DynamicPropertyRegistry registry) {
+    static void propiedades(DynamicPropertyRegistry registry) {
         registry.add("spring.datasource.url", postgres::getJdbcUrl);
         registry.add("spring.datasource.username", postgres::getUsername);
         registry.add("spring.datasource.password", postgres::getPassword);
+        registry.add("spring.mongodb.uri", () -> mongo.getReplicaSetUrl("savora"));
     }
 
     @TestConfiguration
