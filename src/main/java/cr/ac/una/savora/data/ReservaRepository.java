@@ -7,6 +7,8 @@ import java.util.List;
 
 public interface ReservaRepository extends RepositorioBase<Reserva, Long> {
 
+    long countByClienteIdAndEstado(Long clienteId, String estado);
+
     @Query("""
             SELECT r FROM Reserva r
             JOIN FETCH r.paqueteSorpresa p
