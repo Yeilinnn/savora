@@ -53,6 +53,10 @@ jacocoTestReport {
 	}
 }
 
+tasks.named('check') {
+	dependsOn jacocoTestCoverageVerification
+}
+
 jacocoTestCoverageVerification {
 	dependsOn test
 	violationRules {

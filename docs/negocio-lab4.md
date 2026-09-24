@@ -54,4 +54,32 @@ Records de entrada (`CrearReservaRequest`, `CerrarPaqueteRequest`) con `@NotNull
 | ReservaServiceRollbackIT | Integración (Testcontainers) | 1 |
 | **Total nuevas** | | **18** |
 
-Cobertura verificada con `./gradlew jacocoTestReport` → `build/reports/jacoco/test/html/index.html`, regla mínima de 70% en `cr.ac.una.savora.business` forzada con `jacocoTestCoverageVerification`.
+### Matriz regla de negocio → prueba Mockito
+
+| Regla | Excepción o resultado | Prueba |
+|---|---|---|
+| Paquete y cliente existen | — | `ReservaServiceTest.reservaExitosaCuandoTodoEstaEnRegla` |
+| Descuento desde precios del paquete | `ReservaResumen.descuentoPorcentaje` | `ReservaServiceTest.calculaElPorcentajeDeDescuentoCorrectamente` |
+| Paquete inexistente | `RecursoNoEncontradoException` | `ReservaServiceTest.lanzaExcepcionSiElPaqueteNoExiste` |
+| Cliente inexistente | `RecursoNoEncontradoException` | `ReservaServiceTest.lanzaExcepcionSiElClienteNoExiste` |
+| Hora límite ya pasó | `HoraLimiteSuperadaException` | `ReservaServiceTest.lanzaExcepcionSiYaPasoLaHoraLimite` |
+| Límite de reservas activas | `LimiteReservasActivasException` | `ReservaServiceTest.lanzaExcepcionSiElClienteYaAlcanzoSuLimiteDeReservasActivas` |
+| Cliente confiable (límite 5) | reserva permitida | `ReservaServiceTest.unClienteConfiablePuedeReservarPorEncimaDelLimiteBase` |
+| Paquete no `disponible` al reservar | `TransicionEstadoInvalidaException` | `ReservaServiceTest.lanzaExcepcionSiElPaqueteYaNoEstaDisponible` |
+| Donación a org. con menor capacidad que alcanza | `CierreResumen` DONADO | `CierreDePaquetesServiceTest.donaElPaqueteALaOrganizacionConMenorCapacidadQueAunAsiAlcanza` |
+| Sin org. con capacidad suficiente | estado `perdido` | `CierreDePaquetesServiceTest.marcaComoPerdidoSiNingunaOrganizacionAlcanza` |
+| Paquete inexistente al cerrar | `RecursoNoEncontradoException` | `CierreDePaquetesServiceTest.lanzaExcepcionSiElPaqueteNoExiste` |
+| Carrera: paquete ya reservado | `TransicionEstadoInvalidaException` | `CierreDePaquetesServiceTest.lanzaExcepcionSiElPaqueteYaFueReservadoJustoAntesDelCierre` |
+| Transición inválida al marcar perdido | `TransicionEstadoInvalidaException` | `CierreDePaquetesServiceTest.siNingunaOrganizacionAlcanzaYElPaqueteYaNoEstaDisponibleTambienLanzaExcepcion` |
+| State: `disponible` → `reservado` | — | `EstadoPaqueteTest.disponiblePuedeTransitarAReservado` |
+| State: no revertir a `disponible` | `TransicionEstadoInvalidaException` | `EstadoPaqueteTest.reservadoNoPuedeVolverADisponible` |
+
+Rollback transaccional (integración, no Mockito): `ReservaServiceRollbackIT.siLaReservaFallaAMitadDeCaminoNadaQuedaEscrito`.
+
+## Cobertura JaCoCo
+
+- Reporte HTML: `./gradlew build` (genera `build/reports/jacoco/test/html/index.html` al finalizar las pruebas).
+- Umbral: **70%** de instrucciones cubiertas en paquetes `cr.ac.una.savora.business` y subpaquetes, aplicado con la tarea `jacocoTestCoverageVerification`.
+- **CI:** la tarea `check` (incluida en `./gradlew build`) depende de `jacocoTestCoverageVerification`, así que GitHub Actions falla si la cobertura de negocio baja del mínimo.
+
+Los procesos del Lab 4 se invocan desde la capa de servicio; la capa REST de reservas/cierre puede añadirse en un laboratorio posterior sin cambiar estas reglas.
