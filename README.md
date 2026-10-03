@@ -28,6 +28,7 @@ EIF509 Desarrollo de Aplicaciones Basadas en Web · Universidad Nacional · II C
 - [Modelo de datos — Laboratorio 2](docs/modelo-datos-lab2.md)
 - [Persistencia — Laboratorio 3](docs/persistencia-lab3.md)
 - [Capa de negocio — Laboratorio 4](docs/negocio-lab4.md)
+- [API REST — Laboratorio 5 (en curso)](docs/api-lab5.md)
 - [ADR-001: Versión de Spring Boot](docs/adr/ADR-001-version-spring-boot.md)
 
 ## Cómo levantar el proyecto
@@ -69,13 +70,12 @@ docker compose up -d
 Con la aplicación corriendo:
 
 ```bash
-curl http://localhost:8080/api/salud
-curl http://localhost:8080/api/categorias
-curl http://localhost:8080/api/clientes/1/perfil-impacto
-curl http://localhost:8080/api/negocios/1/perfil-impacto
+curl http://localhost:8080/api/v1/salud
+curl http://localhost:8080/swagger-ui.html
+curl http://localhost:8080/api/v1/clientes/1/perfil-impacto
 curl http://localhost:8080/actuator/health
 ```
 
 ## Estado del proyecto
 
-En desarrollo — Laboratorio 4: capa de negocio (`ReservaService`, `CierreDePaquetesService`), DTOs, excepciones de dominio, patrones State y Specification, pruebas Mockito y verificación de cobertura en CI. Detalle en [negocio-lab4.md](docs/negocio-lab4.md).
+En desarrollo — Laboratorio 5: API `/api/v1`, Problem Details, OpenAPI (parte Nazareth); JWT, paquetes y cierre (pendiente Yeilin). Ver [api-lab5.md](docs/api-lab5.md).

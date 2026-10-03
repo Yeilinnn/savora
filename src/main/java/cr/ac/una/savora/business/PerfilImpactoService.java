@@ -1,5 +1,6 @@
 package cr.ac.una.savora.business;
 
+import cr.ac.una.savora.business.dto.PerfilImpactoResumen;
 import cr.ac.una.savora.data.CodigoInsignia;
 import cr.ac.una.savora.data.Insignia;
 import cr.ac.una.savora.data.PerfilImpacto;
@@ -30,6 +31,20 @@ public class PerfilImpactoService {
         return perfilImpactoRepository
                 .findByPropietarioIdAndTipoPropietario(propietarioId, tipoPropietario)
                 .orElseGet(() -> perfilImpactoRepository.save(new PerfilImpacto(propietarioId, tipoPropietario)));
+    }
+
+    public PerfilImpactoResumen consultarResumen(String propietarioId, TipoPropietario tipoPropietario) {
+        PerfilImpacto perfil = obtenerOCrear(propietarioId, tipoPropietario);
+        return new PerfilImpactoResumen(
+                perfil.getPropietarioId(),
+                perfil.getTipoPropietario().name(),
+                perfil.getKgRescatados().doubleValue(),
+                perfil.getReservasRecogidas(),
+                perfil.getReservasNoRecogidas(),
+                perfil.getPaquetesDonados(),
+                perfil.getPaquetesPerdidos(),
+                perfil.getInsignias().stream().map(i -> i.getCodigo().name()).toList(),
+                calcularLimiteReservas(perfil));
     }
 
     public int calcularLimiteReservas(PerfilImpacto perfil) {
