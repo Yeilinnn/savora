@@ -67,26 +67,26 @@ class ReservaServiceRollbackIT {
     ClienteRepository clienteRepository;
 
     @Test
-    void siLaReservaFallaAMitadDeCaminoNadaQuedaEscrito() {
-        // Paquete 5 (seed): 'Caja de vegetales frescos', estado 'disponible', sin reserva previa.
-        // Simulamos una condición de carrera: otro cliente ya reservó este mismo paquete
-        // justo antes (viola la restricción UNIQUE de reserva.paquete_sorpresa_id).
+    void siLaReservaFallaDespuesDeActualizarElPaqueteElRollbackLoDeshace() {
+        // Paquete 5 (seed): disponible, sin reserva previa.
+        // ReservaService hace saveAndFlush del paquete antes del INSERT de reserva; forzamos
+        // fallo en el INSERT (UNIQUE paquete_sorpresa_id) para comprobar que el UPDATE previo
+        // se revierte gracias a @Transactional.
         Cliente clienteQueYaReservo = clienteRepository.findById(2L).orElseThrow();
         PaqueteSorpresa paquete = paqueteSorpresaRepository.findById(5L).orElseThrow();
         reservaRepository.saveAndFlush(
                 new Reserva(clienteQueYaReservo, paquete, OffsetDateTime.now(), "pendiente"));
 
         long reservasAntes = reservaRepository.count();
+        int cantidadAntes = paquete.getCantidad();
 
         assertThatThrownBy(() -> reservaService.reservar(new CrearReservaRequest(3L, 5L)))
                 .isInstanceOf(DataIntegrityViolationException.class);
 
-        // El paquete debe seguir "disponible": el cambio de estado que sí se alcanzó a
-        // escribir en la transacción se deshizo con el rollback.
         PaqueteSorpresa paqueteDespues = paqueteSorpresaRepository.findById(5L).orElseThrow();
         assertThat(paqueteDespues.getEstado()).isEqualTo("disponible");
+        assertThat(paqueteDespues.getCantidad()).isEqualTo(cantidadAntes);
 
-        // No se agregó ninguna reserva nueva (solo sigue la que insertamos manualmente antes).
         assertThat(reservaRepository.count()).isEqualTo(reservasAntes);
     }
 }

@@ -2,6 +2,7 @@ package cr.ac.una.savora.business;
 
 import cr.ac.una.savora.business.dto.CrearReservaRequest;
 import cr.ac.una.savora.business.dto.ReservaResumen;
+import cr.ac.una.savora.business.excepcion.CantidadNoDisponibleException;
 import cr.ac.una.savora.business.excepcion.HoraLimiteSuperadaException;
 import cr.ac.una.savora.business.excepcion.LimiteReservasActivasException;
 import cr.ac.una.savora.business.excepcion.RecursoNoEncontradoException;
@@ -91,7 +92,7 @@ class ReservaServiceTest {
         when(perfilImpactoService.obtenerOCrear("1", TipoPropietario.CLIENTE)).thenReturn(perfil);
         when(perfilImpactoService.calcularLimiteReservas(perfil)).thenReturn(3);
         when(reservaRepository.countByClienteIdAndEstado(1L, "pendiente")).thenReturn(0L);
-        when(paqueteSorpresaRepository.save(any(PaqueteSorpresa.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(paqueteSorpresaRepository.saveAndFlush(any(PaqueteSorpresa.class))).thenAnswer(inv -> inv.getArgument(0));
         when(reservaRepository.save(any(Reserva.class))).thenAnswer(inv -> {
             Reserva r = inv.getArgument(0);
             ReflectionTestUtils.setField(r, "id", 100L);
@@ -103,7 +104,8 @@ class ReservaServiceTest {
         assertThat(resumen.id()).isEqualTo(100L);
         assertThat(resumen.estado()).isEqualTo("pendiente");
         assertThat(paquete.getEstado()).isEqualTo("reservado");
-        verify(paqueteSorpresaRepository).save(paquete);
+        assertThat(paquete.getCantidad()).isEqualTo(9);
+        verify(paqueteSorpresaRepository).saveAndFlush(paquete);
     }
 
     @Test
@@ -117,7 +119,7 @@ class ReservaServiceTest {
         when(perfilImpactoService.obtenerOCrear("1", TipoPropietario.CLIENTE)).thenReturn(perfil);
         when(perfilImpactoService.calcularLimiteReservas(perfil)).thenReturn(3);
         when(reservaRepository.countByClienteIdAndEstado(1L, "pendiente")).thenReturn(0L);
-        when(paqueteSorpresaRepository.save(any(PaqueteSorpresa.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(paqueteSorpresaRepository.saveAndFlush(any(PaqueteSorpresa.class))).thenAnswer(inv -> inv.getArgument(0));
         when(reservaRepository.save(any(Reserva.class))).thenAnswer(inv -> inv.getArgument(0));
 
         ReservaResumen resumen = service.reservar(new CrearReservaRequest(1L, 5L));
@@ -173,7 +175,7 @@ class ReservaServiceTest {
         assertThatThrownBy(() -> service.reservar(new CrearReservaRequest(1L, 5L)))
                 .isInstanceOf(LimiteReservasActivasException.class);
 
-        verify(paqueteSorpresaRepository, never()).save(any());
+        verify(paqueteSorpresaRepository, never()).saveAndFlush(any());
     }
 
     @Test
@@ -187,12 +189,50 @@ class ReservaServiceTest {
         when(perfilImpactoService.obtenerOCrear("1", TipoPropietario.CLIENTE)).thenReturn(perfil);
         when(perfilImpactoService.calcularLimiteReservas(perfil)).thenReturn(5); // confiable
         when(reservaRepository.countByClienteIdAndEstado(1L, "pendiente")).thenReturn(4L); // > límite base (3)
-        when(paqueteSorpresaRepository.save(any(PaqueteSorpresa.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(paqueteSorpresaRepository.saveAndFlush(any(PaqueteSorpresa.class))).thenAnswer(inv -> inv.getArgument(0));
         when(reservaRepository.save(any(Reserva.class))).thenAnswer(inv -> inv.getArgument(0));
 
         ReservaResumen resumen = service.reservar(new CrearReservaRequest(1L, 5L));
 
         assertThat(resumen).isNotNull();
+    }
+
+    @Test
+    void lanzaExcepcionSiNoHayUnidadesDisponibles() {
+        PaqueteSorpresa paquete = paqueteConHoraLimite(5L, "2026-08-27T21:30:00-06:00");
+        paquete.setCantidad(0);
+        Cliente cliente = cliente(1L);
+        PerfilImpacto perfil = new PerfilImpacto("1", TipoPropietario.CLIENTE);
+
+        when(paqueteSorpresaRepository.findById(5L)).thenReturn(Optional.of(paquete));
+        when(clienteRepository.findById(1L)).thenReturn(Optional.of(cliente));
+        when(perfilImpactoService.obtenerOCrear("1", TipoPropietario.CLIENTE)).thenReturn(perfil);
+        when(perfilImpactoService.calcularLimiteReservas(perfil)).thenReturn(3);
+        when(reservaRepository.countByClienteIdAndEstado(1L, "pendiente")).thenReturn(0L);
+
+        assertThatThrownBy(() -> service.reservar(new CrearReservaRequest(1L, 5L)))
+                .isInstanceOf(CantidadNoDisponibleException.class);
+    }
+
+    @Test
+    void transitaAAgotadoCuandoLaUltimaUnidadSeReserva() {
+        PaqueteSorpresa paquete = paqueteConHoraLimite(5L, "2026-08-27T21:30:00-06:00");
+        paquete.setCantidad(1);
+        Cliente cliente = cliente(1L);
+        PerfilImpacto perfil = new PerfilImpacto("1", TipoPropietario.CLIENTE);
+
+        when(paqueteSorpresaRepository.findById(5L)).thenReturn(Optional.of(paquete));
+        when(clienteRepository.findById(1L)).thenReturn(Optional.of(cliente));
+        when(perfilImpactoService.obtenerOCrear("1", TipoPropietario.CLIENTE)).thenReturn(perfil);
+        when(perfilImpactoService.calcularLimiteReservas(perfil)).thenReturn(3);
+        when(reservaRepository.countByClienteIdAndEstado(1L, "pendiente")).thenReturn(0L);
+        when(paqueteSorpresaRepository.saveAndFlush(any(PaqueteSorpresa.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(reservaRepository.save(any(Reserva.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        service.reservar(new CrearReservaRequest(1L, 5L));
+
+        assertThat(paquete.getEstado()).isEqualTo("agotado");
+        assertThat(paquete.getCantidad()).isZero();
     }
 
     @Test

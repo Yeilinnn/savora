@@ -2,6 +2,7 @@ package cr.ac.una.savora.business;
 
 import cr.ac.una.savora.business.dto.CrearReservaRequest;
 import cr.ac.una.savora.business.dto.ReservaResumen;
+import cr.ac.una.savora.business.excepcion.CantidadNoDisponibleException;
 import cr.ac.una.savora.business.excepcion.HoraLimiteSuperadaException;
 import cr.ac.una.savora.business.excepcion.LimiteReservasActivasException;
 import cr.ac.una.savora.business.excepcion.RecursoNoEncontradoException;
@@ -62,10 +63,14 @@ public class ReservaService {
         }
 
         validarLimiteDeReservasActivas(cliente);
+        if (paquete.getCantidad() <= 0) {
+            throw new CantidadNoDisponibleException(paquete.getId());
+        }
 
-        // Patrón State: la transición valida por sí misma que el paquete esté DISPONIBLE.
-        paquete.setEstado(EstadoPaquete.desde(paquete.getEstado()).transitarA(EstadoPaquete.RESERVADO));
-        paqueteSorpresaRepository.save(paquete);
+        paquete.setCantidad(paquete.getCantidad() - 1);
+        EstadoPaquete destino = paquete.getCantidad() == 0 ? EstadoPaquete.AGOTADO : EstadoPaquete.RESERVADO;
+        paquete.setEstado(EstadoPaquete.desde(paquete.getEstado()).transitarA(destino));
+        paqueteSorpresaRepository.saveAndFlush(paquete);
 
         Reserva reserva = reservaRepository.save(new Reserva(cliente, paquete, ahora, ESTADO_PENDIENTE));
 
