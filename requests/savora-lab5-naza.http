@@ -1,0 +1,42 @@
+### Lab 5 — peticiones Nazareth (sin JWT por ahora)
+@baseUrl = http://localhost:8080
+
+### Salud v1
+GET {{baseUrl}}/api/v1/salud
+
+### Crear reserva (201)
+POST {{baseUrl}}/api/v1/reservas
+Content-Type: application/json
+
+{
+  "clienteId": 1,
+  "paqueteSorpresaId": 5
+}
+
+### Listar reservas con filtros
+GET {{baseUrl}}/api/v1/reservas?clienteId=1&estado=recogido&page=0&size=10&sort=fechaHoraReserva,desc
+
+### Cliente por id
+GET {{baseUrl}}/api/v1/clientes/1
+
+### Crear cliente
+POST {{baseUrl}}/api/v1/clientes
+Content-Type: application/json
+
+{
+  "nombre": "Prueba API",
+  "correo": "prueba.api@example.com",
+  "telefono": "8888-9999"
+}
+
+### Perfil impacto cliente (DTO, no documento Mongo crudo)
+GET {{baseUrl}}/api/v1/clientes/1/perfil-impacto
+
+### Negocios paginados
+GET {{baseUrl}}/api/v1/negocios?page=0&size=5
+
+### Categorías
+GET {{baseUrl}}/api/v1/categorias?page=0&size=10
+
+### Organizaciones comunitarias
+GET {{baseUrl}}/api/v1/organizaciones-comunitarias?page=0&size=10
