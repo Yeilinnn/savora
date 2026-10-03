@@ -2,6 +2,7 @@ package cr.ac.una.savora.business;
 
 import cr.ac.una.savora.business.dto.CerrarPaqueteRequest;
 import cr.ac.una.savora.business.dto.CierreResumen;
+import cr.ac.una.savora.business.excepcion.CierreAntesDeHoraLimiteException;
 import cr.ac.una.savora.business.excepcion.RecursoNoEncontradoException;
 import cr.ac.una.savora.business.excepcion.TransicionEstadoInvalidaException;
 import cr.ac.una.savora.data.Categoria;
@@ -17,6 +18,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.math.BigDecimal;
@@ -85,10 +87,15 @@ class CierreDePaquetesServiceTest {
         when(paqueteSorpresaRepository.save(any(PaqueteSorpresa.class))).thenAnswer(inv -> inv.getArgument(0));
         when(donacionRepository.save(any(Donacion.class))).thenAnswer(inv -> inv.getArgument(0));
 
+        when(paqueteSorpresaRepository.findAll(any(Specification.class))).thenAnswer(inv -> List.of(paquete));
+
         CierreResumen resumen = service.cerrar(new CerrarPaqueteRequest(4L));
 
         assertThat(resumen.resultado()).isEqualTo("DONADO");
-        assertThat(resumen.organizacionComunitariaId()).isEqualTo(1L); // la chica, no la grande
+        assertThat(resumen.organizacionComunitariaId()).isEqualTo(1L);
+        assertThat(resumen.kilogramosDonados()).isEqualTo(4);
+        assertThat(resumen.kilogramosAcumuladosNegocio()).isEqualTo(4);
+        assertThat(resumen.organizacionesRechazadas()).containsExactly(2L);
         assertThat(paquete.getEstado()).isEqualTo("donado");
         verify(donacionRepository).save(any(Donacion.class));
     }
@@ -107,6 +114,18 @@ class CierreDePaquetesServiceTest {
         assertThat(resumen.resultado()).isEqualTo("PERDIDO");
         assertThat(paquete.getEstado()).isEqualTo("perdido");
         verify(donacionRepository, never()).save(any());
+    }
+
+    @Test
+    void lanzaExcepcionSiAunNoPasoLaHoraLimite() {
+        PaqueteSorpresa paquete = paquete(5L, "disponible", 10);
+        ReflectionTestUtils.setField(paquete, "horaLimiteRecogida",
+                OffsetDateTime.parse("2026-08-27T21:30:00-06:00"));
+
+        when(paqueteSorpresaRepository.findById(5L)).thenReturn(Optional.of(paquete));
+
+        assertThatThrownBy(() -> service.cerrar(new CerrarPaqueteRequest(5L)))
+                .isInstanceOf(CierreAntesDeHoraLimiteException.class);
     }
 
     @Test

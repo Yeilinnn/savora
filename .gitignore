@@ -35,3 +35,6 @@ out/
 
 ### VS Code ###
 .vscode/
+
+### Debug local ###
+salida*.log
