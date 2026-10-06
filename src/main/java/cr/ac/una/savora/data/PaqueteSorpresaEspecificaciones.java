@@ -1,5 +1,6 @@
 package cr.ac.una.savora.data;
 
+import jakarta.persistence.criteria.JoinType;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.time.OffsetDateTime;
@@ -28,5 +29,21 @@ public final class PaqueteSorpresaEspecificaciones {
     public static Specification<PaqueteSorpresa> horaLimiteVencida(OffsetDateTime ahora) {
         return (root, query, cb) ->
                 ahora == null ? cb.conjunction() : cb.lessThanOrEqualTo(root.get("horaLimiteRecogida"), ahora);
+    }
+
+    /**
+     * Trae negocio y categoría con JOIN FETCH en la misma consulta (Lab 3: evita el N+1
+     * al listar paquetes paginados). El "if" excluye el fetch de la consulta de conteo
+     * que Spring Data ejecuta aparte para la paginación.
+     */
+    public static Specification<PaqueteSorpresa> conNegocioYCategoria() {
+        return (root, query, cb) -> {
+            if (Long.class != query.getResultType()) {
+                root.fetch("negocio", JoinType.LEFT);
+                root.fetch("categoria", JoinType.LEFT);
+                query.distinct(true);
+            }
+            return cb.conjunction();
+        };
     }
 }
