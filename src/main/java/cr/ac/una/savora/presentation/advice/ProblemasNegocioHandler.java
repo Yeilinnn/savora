@@ -9,6 +9,7 @@ import cr.ac.una.savora.business.excepcion.TransicionEstadoInvalidaException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -55,6 +56,13 @@ public class ProblemasNegocioHandler {
         ProblemDetail problema = ProblemDetail.forStatusAndDetail(
                 HttpStatus.CONFLICT, "Conflicto con datos existentes (p. ej. recurso duplicado)");
         problema.setTitle("Conflicto");
+        return problema;
+    }
+
+    @ExceptionHandler(AuthenticationException.class)
+    public ProblemDetail noAutenticado(AuthenticationException ex) {
+        ProblemDetail problema = ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, ex.getMessage());
+        problema.setTitle("No autenticado");
         return problema;
     }
 }

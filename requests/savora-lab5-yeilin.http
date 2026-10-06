@@ -1,0 +1,54 @@
+### Lab 5 — peticiones Yeilin (JWT + paquetes + cierre)
+@baseUrl = http://localhost:8080
+
+### Login negocio (200, devuelve token)
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "username": "negocio1",
+  "password": "negocio123"
+}
+
+### Login con contraseña incorrecta (401)
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "username": "negocio1",
+  "password": "incorrecta"
+}
+
+### Listar paquetes (público, sin token)
+GET {{baseUrl}}/api/v1/paquetes?estado=disponible&page=0&size=10
+
+### Crear paquete sin token (401)
+POST {{baseUrl}}/api/v1/paquetes
+Content-Type: application/json
+
+{
+  "categoriaId": 1,
+  "descripcion": "Pan del día",
+  "cantidad": 5,
+  "precioOriginal": 5000,
+  "precioConDescuento": 2000,
+  "horaLimiteRecogida": "2026-12-01T20:00:00-06:00"
+}
+
+### Crear paquete con rol negocio (201) — pegar el token del login de negocio1
+POST {{baseUrl}}/api/v1/paquetes
+Authorization: Bearer PEGA_AQUI_EL_TOKEN_DE_NEGOCIO1
+Content-Type: application/json
+
+{
+  "categoriaId": 1,
+  "descripcion": "Pan del día",
+  "cantidad": 5,
+  "precioOriginal": 5000,
+  "precioConDescuento": 2000,
+  "horaLimiteRecogida": "2026-12-01T20:00:00-06:00"
+}
+
+### Cerrar paquete de otro negocio (403) — token de negocio1 contra paquete 3 (es del negocio 2)
+POST {{baseUrl}}/api/v1/paquetes/3/cierre
+Authorization: Bearer PEGA_AQUI_EL_TOKEN_DE_NEGOCIO1
