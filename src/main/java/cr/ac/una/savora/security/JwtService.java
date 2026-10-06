@@ -41,9 +41,14 @@ public class JwtService {
                 .compact();
     }
 
+    /**
+     * Valida firma y vencimiento usando el mismo Clock inyectado con el que se generó el token,
+     * para que generar y validar coincidan (y las pruebas con reloj fijo sean deterministas).
+     */
     public Claims analizar(String token) {
         return Jwts.parser()
                 .verifyWith(llave)
+                .clock(() -> Date.from(clock.instant()))
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();
