@@ -1,0 +1,38 @@
+### Lab 6 — pruebas contra la API desplegada (cambie baseUrl por la URL de Render)
+@baseUrl = http://localhost:8080
+
+### Salud
+GET {{baseUrl}}/actuator/health
+
+### Login cliente (la SPA usa este endpoint)
+# @name loginCliente
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "username": "cliente1",
+  "password": "cliente123"
+}
+
+### Paquetes disponibles (paginado)
+GET {{baseUrl}}/api/v1/paquetes?estado=disponible&page=0&size=6&sort=horaLimiteRecogida,asc
+Authorization: Bearer {{loginCliente.response.body.token}}
+
+### Reservar un paquete
+POST {{baseUrl}}/api/v1/reservas
+Authorization: Bearer {{loginCliente.response.body.token}}
+Content-Type: application/json
+
+{
+  "paqueteSorpresaId": 5
+}
+
+### Mis reservas
+GET {{baseUrl}}/api/v1/reservas?page=0&size=8&sort=fechaHoraReserva,desc
+Authorization: Bearer {{loginCliente.response.body.token}}
+
+### Preflight CORS desde la SPA (cambie Origin por el dominio real de la SPA)
+OPTIONS {{baseUrl}}/api/v1/paquetes
+Origin: http://localhost:5173
+Access-Control-Request-Method: GET
+Access-Control-Request-Headers: authorization
