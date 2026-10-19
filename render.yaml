@@ -1,0 +1,39 @@
+# Blueprint de Render: API (Docker) + SPA (sitio estático).
+# Los valores marcados "sync: false" se piden al crear el Blueprint y NO se guardan en el
+# repositorio. PostgreSQL (Neon) y MongoDB (Atlas) se crean aparte; ver docs/despliegue-lab6.md.
+services:
+  - type: web
+    name: savora-api
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /actuator/health
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      - key: SAVORA_JWT_SECRET
+        generateValue: true
+      - key: DB_URL
+        sync: false
+      - key: DB_USER
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: MONGODB_URI
+        sync: false
+      - key: SAVORA_CORS_ORIGINS
+        sync: false
+      - key: SAVORA_SEED_NEGOCIO_PASSWORD
+        sync: false
+      - key: SAVORA_SEED_CLIENTE_PASSWORD
+        sync: false
+
+  - type: web
+    name: savora-spa
+    runtime: static
+    rootDir: spa
+    buildCommand: npm ci && npm run build
+    staticPublishPath: dist
+    envVars:
+      - key: VITE_API_URL
+        sync: false

@@ -7,7 +7,7 @@ on:
     branches: [ main ]
 
 jobs:
-  build:
+  api:
     runs-on: ubuntu-latest
 
     steps:
@@ -26,3 +26,28 @@ jobs:
 
       - name: Compilar y probar
         run: ./gradlew build
+
+  spa:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: spa
+
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@v4
+
+      - name: Configurar Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: spa/package-lock.json
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Compilar la SPA
+        run: npm run build
+        env:
+          VITE_API_URL: https://ejemplo.invalid

@@ -1,0 +1,12 @@
+.git
+.github
+.gradle
+build
+spa
+docs
+articulo
+requests
+mongo-init
+*.md
+.vscode
+.idea
