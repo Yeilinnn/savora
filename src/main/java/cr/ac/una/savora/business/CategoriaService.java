@@ -10,8 +10,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-
 @Service
 public class CategoriaService {
 
@@ -19,12 +17,6 @@ public class CategoriaService {
 
     public CategoriaService(CategoriaRepository categoriaRepository) {
         this.categoriaRepository = categoriaRepository;
-    }
-
-    public List<String> obtenerCategorias() {
-        return categoriaRepository.findAll().stream()
-                .map(Categoria::getNombre)
-                .toList();
     }
 
     @Transactional(readOnly = true)
@@ -43,5 +35,19 @@ public class CategoriaService {
     public CategoriaResumen crear(CrearCategoriaSolicitud solicitud) {
         Categoria categoria = categoriaRepository.save(new Categoria(solicitud.nombre()));
         return new CategoriaResumen(categoria.getId(), categoria.getNombre());
+    }
+
+    @Transactional
+    public CategoriaResumen actualizar(Long id, CrearCategoriaSolicitud solicitud) {
+        Categoria categoria = categoriaRepository.findById(id)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Categoria", id));
+        categoria.setNombre(solicitud.nombre());
+        return new CategoriaResumen(categoria.getId(), categoria.getNombre());
+    }
+
+    @Transactional
+    public void eliminar(Long id) {
+        categoriaRepository.delete(categoriaRepository.findById(id)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Categoria", id)));
     }
 }

@@ -13,6 +13,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -42,5 +43,27 @@ class ClienteAppServiceTest {
         });
 
         assertThat(service.crear(new CrearClienteSolicitud("Nuevo", "n@t.com", "1111")).id()).isEqualTo(10L);
+    }
+
+    @Test
+    void actualizarModificaClienteExistente() {
+        Cliente cliente = new Cliente("Ana", "ana@test.com", "8888");
+        ReflectionTestUtils.setField(cliente, "id", 1L);
+        when(clienteRepository.findById(1L)).thenReturn(Optional.of(cliente));
+        when(clienteRepository.save(cliente)).thenReturn(cliente);
+
+        assertThat(service.actualizar(1L, new CrearClienteSolicitud("Ana M.", "ana@test.com", "9999")).nombre())
+                .isEqualTo("Ana M.");
+    }
+
+    @Test
+    void eliminarBorraClienteExistente() {
+        Cliente cliente = new Cliente("Ana", "ana@test.com", "8888");
+        ReflectionTestUtils.setField(cliente, "id", 1L);
+        when(clienteRepository.findById(1L)).thenReturn(Optional.of(cliente));
+
+        service.eliminar(1L);
+
+        verify(clienteRepository).delete(cliente);
     }
 }

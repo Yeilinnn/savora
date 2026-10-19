@@ -50,12 +50,12 @@ public class ReservaService {
     }
 
     @Transactional
-    public ReservaResumen reservar(@Valid CrearReservaRequest request) {
+    public ReservaResumen reservar(@Valid CrearReservaRequest request, Long clienteIdAutenticado) {
         PaqueteSorpresa paquete = paqueteSorpresaRepository.findById(request.paqueteSorpresaId())
                 .orElseThrow(() -> new RecursoNoEncontradoException("PaqueteSorpresa", request.paqueteSorpresaId()));
 
-        Cliente cliente = clienteRepository.findById(request.clienteId())
-                .orElseThrow(() -> new RecursoNoEncontradoException("Cliente", request.clienteId()));
+        Cliente cliente = clienteRepository.findById(clienteIdAutenticado)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Cliente", clienteIdAutenticado));
 
         OffsetDateTime ahora = OffsetDateTime.now(clock);
         if (!paquete.getHoraLimiteRecogida().isAfter(ahora)) {

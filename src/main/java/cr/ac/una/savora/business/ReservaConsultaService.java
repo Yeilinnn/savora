@@ -1,6 +1,7 @@
 package cr.ac.una.savora.business;
 
 import cr.ac.una.savora.business.dto.ReservaResumen;
+import cr.ac.una.savora.business.excepcion.PropiedadRecursoException;
 import cr.ac.una.savora.business.excepcion.RecursoNoEncontradoException;
 import cr.ac.una.savora.data.Reserva;
 import cr.ac.una.savora.data.ReservaEspecificaciones;
@@ -21,17 +22,20 @@ public class ReservaConsultaService {
     }
 
     @Transactional(readOnly = true)
-    public Page<ReservaResumen> listar(Long clienteId, String estado, Pageable pageable) {
+    public Page<ReservaResumen> listarParaCliente(Long clienteIdAutenticado, String estado, Pageable pageable) {
         Specification<Reserva> spec = Specification.allOf(
-                ReservaEspecificaciones.delCliente(clienteId),
+                ReservaEspecificaciones.delCliente(clienteIdAutenticado),
                 ReservaEspecificaciones.conEstado(estado));
         return reservaRepository.findAll(spec, pageable).map(ReservaMapeador::aResumen);
     }
 
     @Transactional(readOnly = true)
-    public ReservaResumen obtenerPorId(Long id) {
+    public ReservaResumen obtenerPorIdParaCliente(Long id, Long clienteIdAutenticado) {
         Reserva reserva = reservaRepository.findById(id)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Reserva", id));
+        if (!reserva.getCliente().getId().equals(clienteIdAutenticado)) {
+            throw new PropiedadRecursoException("Reserva", id);
+        }
         return ReservaMapeador.aResumen(reserva);
     }
 }

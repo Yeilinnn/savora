@@ -10,7 +10,10 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.util.Optional;
+
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -31,5 +34,26 @@ class CategoriaServiceCatalogoTest {
         });
 
         assertThat(service.crear(new CrearCategoriaSolicitud("Bebidas")).nombre()).isEqualTo("Bebidas");
+    }
+
+    @Test
+    void actualizarCambiaNombre() {
+        Categoria categoria = new Categoria("Panadería");
+        ReflectionTestUtils.setField(categoria, "id", 3L);
+        when(categoriaRepository.findById(3L)).thenReturn(Optional.of(categoria));
+
+        assertThat(service.actualizar(3L, new CrearCategoriaSolicitud("Repostería")).nombre())
+                .isEqualTo("Repostería");
+    }
+
+    @Test
+    void eliminarBorraCategoria() {
+        Categoria categoria = new Categoria("Panadería");
+        ReflectionTestUtils.setField(categoria, "id", 3L);
+        when(categoriaRepository.findById(3L)).thenReturn(Optional.of(categoria));
+
+        service.eliminar(3L);
+
+        verify(categoriaRepository).delete(categoria);
     }
 }

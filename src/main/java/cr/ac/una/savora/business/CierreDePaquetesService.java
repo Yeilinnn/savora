@@ -3,6 +3,7 @@ package cr.ac.una.savora.business;
 import cr.ac.una.savora.business.dto.CerrarPaqueteRequest;
 import cr.ac.una.savora.business.dto.CierreResumen;
 import cr.ac.una.savora.business.excepcion.CierreAntesDeHoraLimiteException;
+import cr.ac.una.savora.business.excepcion.PropiedadRecursoException;
 import cr.ac.una.savora.business.excepcion.RecursoNoEncontradoException;
 import cr.ac.una.savora.data.Donacion;
 import cr.ac.una.savora.data.DonacionRepository;
@@ -60,14 +61,17 @@ public class CierreDePaquetesService {
                 PaqueteSorpresaEspecificaciones.conEstado(ESTADO_DISPONIBLE),
                 PaqueteSorpresaEspecificaciones.horaLimiteVencida(ahora));
         return paqueteSorpresaRepository.findAll(spec).stream()
-                .map(paquete -> cerrar(new CerrarPaqueteRequest(paquete.getId())))
+                .map(paquete -> cerrar(
+                        new CerrarPaqueteRequest(paquete.getId()), paquete.getNegocio().getId()))
                 .toList();
     }
 
     @Transactional
-    public CierreResumen cerrar(@Valid CerrarPaqueteRequest request) {
+    public CierreResumen cerrar(@Valid CerrarPaqueteRequest request, Long negocioIdAutenticado) {
         PaqueteSorpresa paquete = paqueteSorpresaRepository.findById(request.paqueteSorpresaId())
                 .orElseThrow(() -> new RecursoNoEncontradoException("PaqueteSorpresa", request.paqueteSorpresaId()));
+
+        verificarPropiedadNegocio(paquete, negocioIdAutenticado);
 
         OffsetDateTime ahora = OffsetDateTime.now(clock);
         if (paquete.getHoraLimiteRecogida().isAfter(ahora)) {
@@ -123,6 +127,13 @@ public class CierreDePaquetesService {
             rechazadas.add(elegibles.get(i).getId());
         }
         return new AsignacionDonacion(aceptada, List.copyOf(rechazadas));
+    }
+
+    private void verificarPropiedadNegocio(PaqueteSorpresa paquete, Long negocioIdAutenticado) {
+        if (negocioIdAutenticado == null
+                || !paquete.getNegocio().getId().equals(negocioIdAutenticado)) {
+            throw new PropiedadRecursoException("PaqueteSorpresa", paquete.getId());
+        }
     }
 
     private int calcularKilogramosDonadosNegocio(Long negocioId) {

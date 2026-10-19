@@ -1,5 +1,6 @@
 package cr.ac.una.savora.presentation.api.v1;
 
+import com.jayway.jsonpath.JsonPath;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -57,12 +58,32 @@ class ReservaV1IT {
     @Autowired
     MockMvc mockMvc;
 
+    private String tokenCliente() throws Exception {
+        String respuesta = mockMvc.perform(post("/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"username\":\"cliente1\",\"password\":\"cliente123\"}"))
+                .andReturn().getResponse().getContentAsString();
+        return JsonPath.read(respuesta, "$.token");
+    }
+
     @Test
-    void postReservaDevuelve201ConLocation() throws Exception {
+    void postReservaSinTokenDevuelve401() throws Exception {
         mockMvc.perform(post("/api/v1/reservas")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"clienteId":1,"paqueteSorpresaId":5}
+                                {"paqueteSorpresaId":5}
+                                """))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void postReservaDevuelve201ConLocation() throws Exception {
+        String token = tokenCliente();
+        mockMvc.perform(post("/api/v1/reservas")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"paqueteSorpresaId":5}
                                 """))
                 .andExpect(status().isCreated())
                 .andExpect(header().exists("Location"))
@@ -72,31 +93,38 @@ class ReservaV1IT {
 
     @Test
     void postReservaConCuerpoInvalidoDevuelve400() throws Exception {
+        String token = tokenCliente();
         mockMvc.perform(post("/api/v1/reservas")
+                        .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"clienteId":null,"paqueteSorpresaId":5}
+                                {"paqueteSorpresaId":null}
                                 """))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.title").value("Validación de formato"));
+                .andExpect(jsonPath("$.title").value("Validación de formato"))
+                .andExpect(jsonPath("$.errores").isArray());
     }
 
     @Test
     void postReservaPaqueteInexistenteDevuelve404() throws Exception {
+        String token = tokenCliente();
         mockMvc.perform(post("/api/v1/reservas")
+                        .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"clienteId":1,"paqueteSorpresaId":999}
+                                {"paqueteSorpresaId":999}
                                 """))
                 .andExpect(status().isNotFound());
     }
 
     @Test
     void postReservaFueraDeHoraLimiteDevuelve422() throws Exception {
+        String token = tokenCliente();
         mockMvc.perform(post("/api/v1/reservas")
+                        .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"clienteId":1,"paqueteSorpresaId":4}
+                                {"paqueteSorpresaId":4}
                                 """))
                 .andExpect(status().isUnprocessableEntity())
                 .andExpect(jsonPath("$.title").value("Regla de negocio incumplida"));
@@ -104,7 +132,9 @@ class ReservaV1IT {
 
     @Test
     void getReservaInexistenteDevuelve404() throws Exception {
-        mockMvc.perform(get("/api/v1/reservas/99999"))
+        String token = tokenCliente();
+        mockMvc.perform(get("/api/v1/reservas/99999")
+                        .header("Authorization", "Bearer " + token))
                 .andExpect(status().isNotFound());
     }
 }

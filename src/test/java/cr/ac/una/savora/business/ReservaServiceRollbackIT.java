@@ -80,7 +80,7 @@ class ReservaServiceRollbackIT {
         long reservasAntes = reservaRepository.count();
         int cantidadAntes = paquete.getCantidad();
 
-        assertThatThrownBy(() -> reservaService.reservar(new CrearReservaRequest(3L, 5L)))
+        assertThatThrownBy(() -> reservaService.reservar(new CrearReservaRequest(5L), 3L))
                 .isInstanceOf(DataIntegrityViolationException.class);
 
         PaqueteSorpresa paqueteDespues = paqueteSorpresaRepository.findById(5L).orElseThrow();

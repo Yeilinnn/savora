@@ -3,6 +3,7 @@ package cr.ac.una.savora.business;
 import cr.ac.una.savora.business.dto.CerrarPaqueteRequest;
 import cr.ac.una.savora.business.dto.CierreResumen;
 import cr.ac.una.savora.business.excepcion.CierreAntesDeHoraLimiteException;
+import cr.ac.una.savora.business.excepcion.PropiedadRecursoException;
 import cr.ac.una.savora.business.excepcion.RecursoNoEncontradoException;
 import cr.ac.una.savora.business.excepcion.TransicionEstadoInvalidaException;
 import cr.ac.una.savora.data.Categoria;
@@ -89,7 +90,7 @@ class CierreDePaquetesServiceTest {
 
         when(paqueteSorpresaRepository.findAll(any(Specification.class))).thenAnswer(inv -> List.of(paquete));
 
-        CierreResumen resumen = service.cerrar(new CerrarPaqueteRequest(4L));
+        CierreResumen resumen = service.cerrar(new CerrarPaqueteRequest(4L), 2L);
 
         assertThat(resumen.resultado()).isEqualTo("DONADO");
         assertThat(resumen.organizacionComunitariaId()).isEqualTo(1L);
@@ -109,7 +110,7 @@ class CierreDePaquetesServiceTest {
         when(organizacionComunitariaRepository.findAll()).thenReturn(List.of(chica));
         when(paqueteSorpresaRepository.save(any(PaqueteSorpresa.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        CierreResumen resumen = service.cerrar(new CerrarPaqueteRequest(4L));
+        CierreResumen resumen = service.cerrar(new CerrarPaqueteRequest(4L), 2L);
 
         assertThat(resumen.resultado()).isEqualTo("PERDIDO");
         assertThat(paquete.getEstado()).isEqualTo("perdido");
@@ -124,15 +125,24 @@ class CierreDePaquetesServiceTest {
 
         when(paqueteSorpresaRepository.findById(5L)).thenReturn(Optional.of(paquete));
 
-        assertThatThrownBy(() -> service.cerrar(new CerrarPaqueteRequest(5L)))
+        assertThatThrownBy(() -> service.cerrar(new CerrarPaqueteRequest(5L), 2L))
                 .isInstanceOf(CierreAntesDeHoraLimiteException.class);
+    }
+
+    @Test
+    void lanzaExcepcionSiElNegocioAutenticadoNoEsPropietario() {
+        PaqueteSorpresa paquete = paquete(4L, "disponible", 4);
+        when(paqueteSorpresaRepository.findById(4L)).thenReturn(Optional.of(paquete));
+
+        assertThatThrownBy(() -> service.cerrar(new CerrarPaqueteRequest(4L), 99L))
+                .isInstanceOf(PropiedadRecursoException.class);
     }
 
     @Test
     void lanzaExcepcionSiElPaqueteNoExiste() {
         when(paqueteSorpresaRepository.findById(99L)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service.cerrar(new CerrarPaqueteRequest(99L)))
+        assertThatThrownBy(() -> service.cerrar(new CerrarPaqueteRequest(99L), 2L))
                 .isInstanceOf(RecursoNoEncontradoException.class);
     }
 
@@ -144,7 +154,7 @@ class CierreDePaquetesServiceTest {
         when(paqueteSorpresaRepository.findById(4L)).thenReturn(Optional.of(paquete));
         when(organizacionComunitariaRepository.findAll()).thenReturn(List.of(org));
 
-        assertThatThrownBy(() -> service.cerrar(new CerrarPaqueteRequest(4L)))
+        assertThatThrownBy(() -> service.cerrar(new CerrarPaqueteRequest(4L), 2L))
                 .isInstanceOf(TransicionEstadoInvalidaException.class);
 
         verify(donacionRepository, never()).save(any());
@@ -157,7 +167,7 @@ class CierreDePaquetesServiceTest {
         when(paqueteSorpresaRepository.findById(4L)).thenReturn(Optional.of(paquete));
         when(organizacionComunitariaRepository.findAll()).thenReturn(List.of());
 
-        assertThatThrownBy(() -> service.cerrar(new CerrarPaqueteRequest(4L)))
+        assertThatThrownBy(() -> service.cerrar(new CerrarPaqueteRequest(4L), 2L))
                 .isInstanceOf(TransicionEstadoInvalidaException.class);
     }
 }

@@ -1,20 +1,32 @@
-### Lab 5 — peticiones Nazareth (sin JWT por ahora)
+### Lab 5 — peticiones Nazareth (requiere JWT salvo login/salud/swagger)
 @baseUrl = http://localhost:8080
+@tokenCliente = {{loginCliente.response.body.token}}
+
+### Login cliente (obtener token)
+# @name loginCliente
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "username": "cliente1",
+  "password": "cliente123"
+}
 
 ### Salud v1
 GET {{baseUrl}}/api/v1/salud
 
-### Crear reserva (201)
+### Crear reserva (201) — clienteId viene del token
 POST {{baseUrl}}/api/v1/reservas
+Authorization: Bearer {{tokenCliente}}
 Content-Type: application/json
 
 {
-  "clienteId": 1,
   "paqueteSorpresaId": 5
 }
 
-### Listar reservas con filtros
-GET {{baseUrl}}/api/v1/reservas?clienteId=1&estado=recogido&page=0&size=10&sort=fechaHoraReserva,desc
+### Listar reservas del cliente autenticado
+GET {{baseUrl}}/api/v1/reservas?estado=recogido&page=0&size=10&sort=fechaHoraReserva,desc
+Authorization: Bearer {{tokenCliente}}
 
 ### Cliente por id
 GET {{baseUrl}}/api/v1/clientes/1
