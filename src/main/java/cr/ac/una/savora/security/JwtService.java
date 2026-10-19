@@ -19,10 +19,19 @@ public class JwtService {
     private final Duration vigencia;
     private final Clock clock;
 
+    private static final int LONGITUD_MINIMA_SECRETO_BYTES = 32;
+
     public JwtService(
             @Value("${savora.jwt.secret}") String secreto,
             @Value("${savora.jwt.vigencia-minutos:120}") long vigenciaMinutos,
             Clock clock) {
+        if (secreto == null || secreto.isBlank()) {
+            throw new IllegalStateException(
+                    "Defina savora.jwt.secret o la variable de entorno SAVORA_JWT_SECRET");
+        }
+        if (secreto.getBytes().length < LONGITUD_MINIMA_SECRETO_BYTES) {
+            throw new IllegalStateException("savora.jwt.secret debe tener al menos 32 bytes");
+        }
         this.llave = Keys.hmacShaKeyFor(secreto.getBytes());
         this.vigencia = Duration.ofMinutes(vigenciaMinutos);
         this.clock = clock;

@@ -36,6 +36,21 @@ public class OrganizacionAppService {
         return aResponse(org);
     }
 
+    @Transactional
+    public OrganizacionResumen actualizar(Long id, CrearOrganizacionSolicitud request) {
+        OrganizacionComunitaria org = buscar(id);
+        org.setNombre(request.nombre());
+        org.setTipo(request.tipo());
+        org.setCapacidadRecoleccion(request.capacidadRecoleccion());
+        org.setContacto(request.contacto());
+        return aResponse(organizacionRepository.save(org));
+    }
+
+    @Transactional
+    public void eliminar(Long id) {
+        organizacionRepository.delete(buscar(id));
+    }
+
     private OrganizacionComunitaria buscar(Long id) {
         return organizacionRepository.findById(id)
                 .orElseThrow(() -> new RecursoNoEncontradoException("OrganizacionComunitaria", id));

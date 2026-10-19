@@ -44,12 +44,10 @@ public class SecurityConfig {
                         .requestMatchers("/auth/login").permitAll()
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         .requestMatchers("/actuator/**").permitAll()
-                        // Las dos reglas de abajo son las únicas que exigen autenticación en este
-                        // laboratorio: crear y cerrar paquetes (lo demás -reservas, negocios, etc.-
-                        // ya lo cubre Nazareth en su parte y queda abierto como estaba).
+                        .requestMatchers("/api/v1/reservas/**").hasRole("CLIENTE")
                         .requestMatchers(HttpMethod.POST, "/api/v1/paquetes").hasRole("NEGOCIO")
                         .requestMatchers(HttpMethod.POST, "/api/v1/paquetes/*/cierre").hasRole("NEGOCIO")
-                        .anyRequest().permitAll())
+                        .anyRequest().authenticated())
                 .exceptionHandling(eh -> eh
                         .authenticationEntryPoint(this::noAutenticado)
                         .accessDeniedHandler(this::accesoDenegado))
@@ -69,10 +67,6 @@ public class SecurityConfig {
                 "El usuario autenticado no tiene permiso para este recurso");
     }
 
-    /**
-     * Escribe el Problem Details (RFC 9457) a mano para no depender de la versión de Jackson
-     * (Spring Boot 4 usa Jackson 3, y aquí el cuerpo es chico y de textos fijos).
-     */
     private void escribirProblema(HttpServletResponse response, HttpStatus estado, String titulo, String detalle)
             throws IOException {
         String json = "{\"type\":\"about:blank\",\"title\":\"" + titulo + "\",\"status\":" + estado.value()

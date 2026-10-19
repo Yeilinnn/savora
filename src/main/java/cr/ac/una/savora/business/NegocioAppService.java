@@ -36,6 +36,21 @@ public class NegocioAppService {
         return aResponse(negocio);
     }
 
+    @Transactional
+    public NegocioResumen actualizar(Long id, CrearNegocioSolicitud request) {
+        Negocio negocio = buscar(id);
+        negocio.setNombre(request.nombre());
+        negocio.setTipoNegocio(request.tipoNegocio());
+        negocio.setUbicacion(request.ubicacion());
+        negocio.setHorarioCierre(request.horarioCierre());
+        return aResponse(negocioRepository.save(negocio));
+    }
+
+    @Transactional
+    public void eliminar(Long id) {
+        negocioRepository.delete(buscar(id));
+    }
+
     private Negocio buscar(Long id) {
         return negocioRepository.findById(id)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Negocio", id));

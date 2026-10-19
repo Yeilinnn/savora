@@ -99,7 +99,7 @@ class ReservaServiceTest {
             return r;
         });
 
-        ReservaResumen resumen = service.reservar(new CrearReservaRequest(1L, 5L));
+        ReservaResumen resumen = service.reservar(new CrearReservaRequest(5L), 1L);
 
         assertThat(resumen.id()).isEqualTo(100L);
         assertThat(resumen.estado()).isEqualTo("pendiente");
@@ -122,7 +122,7 @@ class ReservaServiceTest {
         when(paqueteSorpresaRepository.saveAndFlush(any(PaqueteSorpresa.class))).thenAnswer(inv -> inv.getArgument(0));
         when(reservaRepository.save(any(Reserva.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        ReservaResumen resumen = service.reservar(new CrearReservaRequest(1L, 5L));
+        ReservaResumen resumen = service.reservar(new CrearReservaRequest(5L), 1L);
 
         assertThat(resumen.descuentoPorcentaje()).isEqualByComparingTo("58.3");
     }
@@ -131,7 +131,7 @@ class ReservaServiceTest {
     void lanzaExcepcionSiElPaqueteNoExiste() {
         when(paqueteSorpresaRepository.findById(99L)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service.reservar(new CrearReservaRequest(1L, 99L)))
+        assertThatThrownBy(() -> service.reservar(new CrearReservaRequest(99L), 1L))
                 .isInstanceOf(RecursoNoEncontradoException.class);
 
         verify(reservaRepository, never()).save(any());
@@ -143,7 +143,7 @@ class ReservaServiceTest {
         when(paqueteSorpresaRepository.findById(5L)).thenReturn(Optional.of(paquete));
         when(clienteRepository.findById(1L)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service.reservar(new CrearReservaRequest(1L, 5L)))
+        assertThatThrownBy(() -> service.reservar(new CrearReservaRequest(5L), 1L))
                 .isInstanceOf(RecursoNoEncontradoException.class);
     }
 
@@ -154,7 +154,7 @@ class ReservaServiceTest {
         when(paqueteSorpresaRepository.findById(5L)).thenReturn(Optional.of(paquete));
         when(clienteRepository.findById(1L)).thenReturn(Optional.of(cliente));
 
-        assertThatThrownBy(() -> service.reservar(new CrearReservaRequest(1L, 5L)))
+        assertThatThrownBy(() -> service.reservar(new CrearReservaRequest(5L), 1L))
                 .isInstanceOf(HoraLimiteSuperadaException.class);
 
         verify(reservaRepository, never()).save(any());
@@ -172,7 +172,7 @@ class ReservaServiceTest {
         when(perfilImpactoService.calcularLimiteReservas(perfil)).thenReturn(3);
         when(reservaRepository.countByClienteIdAndEstado(1L, "pendiente")).thenReturn(3L);
 
-        assertThatThrownBy(() -> service.reservar(new CrearReservaRequest(1L, 5L)))
+        assertThatThrownBy(() -> service.reservar(new CrearReservaRequest(5L), 1L))
                 .isInstanceOf(LimiteReservasActivasException.class);
 
         verify(paqueteSorpresaRepository, never()).saveAndFlush(any());
@@ -192,7 +192,7 @@ class ReservaServiceTest {
         when(paqueteSorpresaRepository.saveAndFlush(any(PaqueteSorpresa.class))).thenAnswer(inv -> inv.getArgument(0));
         when(reservaRepository.save(any(Reserva.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        ReservaResumen resumen = service.reservar(new CrearReservaRequest(1L, 5L));
+        ReservaResumen resumen = service.reservar(new CrearReservaRequest(5L), 1L);
 
         assertThat(resumen).isNotNull();
     }
@@ -210,7 +210,7 @@ class ReservaServiceTest {
         when(perfilImpactoService.calcularLimiteReservas(perfil)).thenReturn(3);
         when(reservaRepository.countByClienteIdAndEstado(1L, "pendiente")).thenReturn(0L);
 
-        assertThatThrownBy(() -> service.reservar(new CrearReservaRequest(1L, 5L)))
+        assertThatThrownBy(() -> service.reservar(new CrearReservaRequest(5L), 1L))
                 .isInstanceOf(CantidadNoDisponibleException.class);
     }
 
@@ -229,7 +229,7 @@ class ReservaServiceTest {
         when(paqueteSorpresaRepository.saveAndFlush(any(PaqueteSorpresa.class))).thenAnswer(inv -> inv.getArgument(0));
         when(reservaRepository.save(any(Reserva.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        service.reservar(new CrearReservaRequest(1L, 5L));
+        service.reservar(new CrearReservaRequest(5L), 1L);
 
         assertThat(paquete.getEstado()).isEqualTo("agotado");
         assertThat(paquete.getCantidad()).isZero();
@@ -248,7 +248,7 @@ class ReservaServiceTest {
         when(perfilImpactoService.calcularLimiteReservas(perfil)).thenReturn(3);
         when(reservaRepository.countByClienteIdAndEstado(1L, "pendiente")).thenReturn(0L);
 
-        assertThatThrownBy(() -> service.reservar(new CrearReservaRequest(1L, 5L)))
+        assertThatThrownBy(() -> service.reservar(new CrearReservaRequest(5L), 1L))
                 .isInstanceOf(TransicionEstadoInvalidaException.class);
     }
 }

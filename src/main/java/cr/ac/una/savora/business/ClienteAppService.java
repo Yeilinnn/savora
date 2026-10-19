@@ -36,6 +36,20 @@ public class ClienteAppService {
         return aResponse(cliente);
     }
 
+    @Transactional
+    public ClienteResumen actualizar(Long id, CrearClienteSolicitud request) {
+        Cliente cliente = buscar(id);
+        cliente.setNombre(request.nombre());
+        cliente.setCorreo(request.correo());
+        cliente.setTelefono(request.telefono());
+        return aResponse(clienteRepository.save(cliente));
+    }
+
+    @Transactional
+    public void eliminar(Long id) {
+        clienteRepository.delete(buscar(id));
+    }
+
     private Cliente buscar(Long id) {
         return clienteRepository.findById(id)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Cliente", id));

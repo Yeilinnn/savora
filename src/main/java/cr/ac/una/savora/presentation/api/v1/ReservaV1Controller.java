@@ -4,10 +4,12 @@ import cr.ac.una.savora.business.ReservaConsultaService;
 import cr.ac.una.savora.business.ReservaService;
 import cr.ac.una.savora.business.dto.CrearReservaRequest;
 import cr.ac.una.savora.business.dto.ReservaResumen;
+import cr.ac.una.savora.security.UsuarioPrincipal;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -31,8 +33,9 @@ public class ReservaV1Controller {
     }
 
     @PostMapping
-    public ResponseEntity<ReservaResumen> crear(@Valid @RequestBody CrearReservaRequest request) {
-        ReservaResumen creada = reservaService.reservar(request);
+    public ResponseEntity<ReservaResumen> crear(
+            @Valid @RequestBody CrearReservaRequest request, @AuthenticationPrincipal UsuarioPrincipal principal) {
+        ReservaResumen creada = reservaService.reservar(request, principal.getClienteId());
         return ResponseEntity
                 .created(URI.create("/api/v1/reservas/" + creada.id()))
                 .body(creada);
@@ -40,14 +43,14 @@ public class ReservaV1Controller {
 
     @GetMapping
     public Page<ReservaResumen> listar(
-            @RequestParam(required = false) Long clienteId,
+            @AuthenticationPrincipal UsuarioPrincipal principal,
             @RequestParam(required = false) String estado,
             Pageable pageable) {
-        return reservaConsultaService.listar(clienteId, estado, pageable);
+        return reservaConsultaService.listarParaCliente(principal.getClienteId(), estado, pageable);
     }
 
     @GetMapping("/{id}")
-    public ReservaResumen obtener(@PathVariable Long id) {
-        return reservaConsultaService.obtenerPorId(id);
+    public ReservaResumen obtener(@PathVariable Long id, @AuthenticationPrincipal UsuarioPrincipal principal) {
+        return reservaConsultaService.obtenerPorIdParaCliente(id, principal.getClienteId());
     }
 }

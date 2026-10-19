@@ -109,7 +109,9 @@ class PaqueteSorpresaV1IT {
 
     @Test
     void obtenerPaqueteInexistenteDevuelve404() throws Exception {
-        mockMvc.perform(get("/api/v1/paquetes/99999"))
+        String token = tokenDe("negocio1", "negocio123");
+        mockMvc.perform(get("/api/v1/paquetes/99999")
+                        .header("Authorization", "Bearer " + token))
                 .andExpect(status().isNotFound());
     }
 }

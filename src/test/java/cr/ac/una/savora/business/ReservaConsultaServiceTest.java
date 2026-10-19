@@ -1,5 +1,6 @@
 package cr.ac.una.savora.business;
 
+import cr.ac.una.savora.business.excepcion.PropiedadRecursoException;
 import cr.ac.una.savora.data.Cliente;
 import cr.ac.una.savora.data.PaqueteSorpresa;
 import cr.ac.una.savora.data.Reserva;
@@ -18,8 +19,10 @@ import java.math.BigDecimal;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
@@ -49,6 +52,25 @@ class ReservaConsultaServiceTest {
         when(reservaRepository.findAll(any(Specification.class), any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(reserva)));
 
-        assertThat(service.listar(1L, "pendiente", Pageable.unpaged()).getTotalElements()).isEqualTo(1);
+        assertThat(service.listarParaCliente(1L, "pendiente", Pageable.unpaged()).getTotalElements())
+                .isEqualTo(1);
+    }
+
+    @Test
+    void obtenerPorIdParaClienteRechazaReservaDeOtroCliente() {
+        Cliente cliente = new Cliente("Ana", "a@t.com", "1");
+        ReflectionTestUtils.setField(cliente, "id", 2L);
+        var negocio = new cr.ac.una.savora.data.Negocio("N", "T", "U", java.time.LocalTime.NOON);
+        var categoria = new cr.ac.una.savora.data.Categoria("C");
+        PaqueteSorpresa paquete = new PaqueteSorpresa(
+                negocio, categoria, "Desc", 1,
+                java.math.BigDecimal.TEN, java.math.BigDecimal.ONE,
+                OffsetDateTime.now(), "reservado");
+        Reserva reserva = new Reserva(cliente, paquete, OffsetDateTime.now(), "pendiente");
+        ReflectionTestUtils.setField(reserva, "id", 5L);
+        when(reservaRepository.findById(5L)).thenReturn(Optional.of(reserva));
+
+        assertThatThrownBy(() -> service.obtenerPorIdParaCliente(5L, 1L))
+                .isInstanceOf(PropiedadRecursoException.class);
     }
 }
