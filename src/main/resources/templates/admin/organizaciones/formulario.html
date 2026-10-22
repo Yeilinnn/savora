@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/admin-layout :: head(${tituloFormulario})}"></head>
+<body>
+<header th:replace="~{fragments/admin-layout :: cabecera}"></header>
+<main>
+    <div class="card">
+        <h1 th:text="${tituloFormulario}">Formulario</h1>
+        <form th:action="${organizacionId} != null ? @{/admin/organizaciones/{id}(id=${organizacionId})} : @{/admin/organizaciones}"
+              method="post" th:object="${organizacionFormulario}">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+            <label for="nombre">Nombre</label>
+            <input id="nombre" type="text" th:field="*{nombre}"/>
+            <p class="campo-error" th:if="${#fields.hasErrors('nombre')}" th:errors="*{nombre}"></p>
+            <label for="tipo">Tipo</label>
+            <input id="tipo" type="text" th:field="*{tipo}"/>
+            <p class="campo-error" th:if="${#fields.hasErrors('tipo')}" th:errors="*{tipo}"></p>
+            <label for="capacidadRecoleccion">Capacidad de recolección (kg)</label>
+            <input id="capacidadRecoleccion" type="number" min="1" th:field="*{capacidadRecoleccion}"/>
+            <p class="campo-error" th:if="${#fields.hasErrors('capacidadRecoleccion')}"
+               th:errors="*{capacidadRecoleccion}"></p>
+            <label for="contacto">Contacto</label>
+            <input id="contacto" type="text" th:field="*{contacto}"/>
+            <p class="campo-error" th:if="${#fields.hasErrors('contacto')}" th:errors="*{contacto}"></p>
+            <button type="submit">Guardar</button>
+            <a class="btn" th:href="@{/admin/organizaciones}">Cancelar</a>
+        </form>
+    </div>
+</main>
+</body>
+</html>
