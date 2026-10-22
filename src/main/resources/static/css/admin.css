@@ -1,0 +1,104 @@
+body {
+    font-family: system-ui, sans-serif;
+    margin: 0;
+    background: #f4f6f8;
+    color: #1a1a1a;
+}
+
+header {
+    background: #1b4332;
+    color: #fff;
+    padding: 1rem 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+header nav a {
+    color: #d8f3dc;
+    margin-right: 1rem;
+    text-decoration: none;
+}
+
+header nav a.activo {
+    font-weight: 700;
+    text-decoration: underline;
+}
+
+main {
+    max-width: 960px;
+    margin: 1.5rem auto;
+    padding: 0 1rem;
+}
+
+.card {
+    background: #fff;
+    border-radius: 8px;
+    padding: 1.25rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    padding: 0.5rem;
+    border-bottom: 1px solid #e0e0e0;
+    text-align: left;
+}
+
+.mensaje {
+    background: #d8f3dc;
+    padding: 0.75rem;
+    border-radius: 6px;
+    margin-bottom: 1rem;
+}
+
+.error {
+    background: #fde2e2;
+    padding: 0.75rem;
+    border-radius: 6px;
+    margin-bottom: 1rem;
+}
+
+.campo-error {
+    color: #b00020;
+    font-size: 0.875rem;
+}
+
+label {
+    display: block;
+    margin-top: 0.75rem;
+    font-weight: 600;
+}
+
+input[type="text"],
+input[type="password"],
+input[type="number"] {
+    width: 100%;
+    padding: 0.5rem;
+    margin-top: 0.25rem;
+    box-sizing: border-box;
+}
+
+button, .btn {
+    margin-top: 1rem;
+    padding: 0.5rem 1rem;
+    background: #2d6a4f;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.paginacion {
+    margin-top: 1rem;
+}
+
+.paginacion a {
+    margin-right: 0.75rem;
+}

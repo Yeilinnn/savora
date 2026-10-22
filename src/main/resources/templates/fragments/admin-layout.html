@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:fragment="head(titulo)">
+    <meta charset="UTF-8"/>
+    <title th:text="${titulo} + ' · Savora Admin'">Savora Admin</title>
+    <link rel="stylesheet" th:href="@{/css/admin.css}"/>
+</head>
+<body>
+<header th:fragment="cabecera">
+    <div><strong>Savora</strong> — módulo administrativo</div>
+    <nav>
+        <a th:href="@{/admin/categorias}"
+           th:classappend="${seccionActiva == 'categorias'} ? 'activo'">Categorías</a>
+        <a th:href="@{/admin/organizaciones}"
+           th:classappend="${seccionActiva == 'organizaciones'} ? 'activo'">Organizaciones</a>
+        <form th:action="@{/logout}" method="post" style="display:inline;">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+            <button type="submit" style="margin-top:0;">Salir</button>
+        </form>
+    </nav>
+</header>
+</body>
+</html>

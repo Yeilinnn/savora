@@ -28,7 +28,9 @@ EIF509 Desarrollo de Aplicaciones Basadas en Web · Universidad Nacional · II C
 - [Modelo de datos — Laboratorio 2](docs/modelo-datos-lab2.md)
 - [Persistencia — Laboratorio 3](docs/persistencia-lab3.md)
 - [Capa de negocio — Laboratorio 4](docs/negocio-lab4.md)
-- [API REST — Laboratorio 5 (en curso)](docs/api-lab5.md)
+- [API REST — Laboratorio 5](docs/api-lab5.md)
+- [Despliegue — Laboratorio 6](docs/despliegue-lab6.md)
+- [Diagrama de despliegue](docs/diagrama-despliegue.md)
 - [ADR-001: Versión de Spring Boot](docs/adr/ADR-001-version-spring-boot.md)
 
 ## Cómo levantar el proyecto
@@ -57,13 +59,25 @@ docker compose up -d
 ./gradlew build
 ```
 
-5. Levantá la aplicación:
+5. Levantá la aplicación (perfil `dev` incluye JWT local y usuarios de prueba):
 
 ```bash
-./gradlew bootRun
+./gradlew bootRun --args='--spring.profiles.active=dev'
 ```
 
-6. La aplicación queda escuchando en `http://localhost:8080`. Flyway aplica las migraciones y el seeder de Mongo carga los datos de ejemplo automáticamente al iniciar.
+6. La aplicación queda en `http://localhost:8080`. Módulo admin: `http://localhost:8080/login` (`negocio1` / `negocio123`). SPA: ver carpeta `spa/` (`npm ci && npm run dev`).
+
+### Variables de entorno (producción — solo nombres)
+
+| Variable | Descripción |
+|---|---|
+| `SAVORA_JWT_SECRET` | Secreto HS256 (≥ 32 bytes); en Render se genera automáticamente |
+| `DB_URL`, `DB_USER`, `DB_PASSWORD` | PostgreSQL (Neon) |
+| `MONGODB_URI` | MongoDB Atlas |
+| `SAVORA_CORS_ORIGINS` | URL HTTPS de la SPA (sin `/` final) |
+| `SAVORA_SEED_NEGOCIO_PASSWORD` | Contraseña inicial de usuarios negocio |
+| `SAVORA_SEED_CLIENTE_PASSWORD` | Contraseña inicial de `cliente1` |
+| `VITE_API_URL` | URL pública de la API (build de la SPA) |
 
 ## Endpoints de prueba
 
@@ -78,4 +92,4 @@ curl http://localhost:8080/actuator/health
 
 ## Estado del proyecto
 
-En desarrollo — Laboratorio 5: API `/api/v1`, Problem Details, OpenAPI (parte Nazareth); JWT, paquetes y cierre (pendiente Yeilin). Ver [api-lab5.md](docs/api-lab5.md).
+Laboratorio 6: API + módulo administrativo Thymeleaf + SPA React + despliegue (Render/Neon/Atlas). Ver [despliegue-lab6.md](docs/despliegue-lab6.md).
