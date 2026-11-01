@@ -31,6 +31,7 @@ EIF509 Desarrollo de Aplicaciones Basadas en Web · Universidad Nacional · II C
 - [API REST — Laboratorio 5](docs/api-lab5.md)
 - [Despliegue — Laboratorio 6](docs/despliegue-lab6.md)
 - [Diagrama de despliegue](docs/diagrama-despliegue.md)
+- [Auditoría de seguridad (Lab 7)](AUDITORIA-SEGURIDAD.md)
 - [ADR-001: Versión de Spring Boot](docs/adr/ADR-001-version-spring-boot.md)
 
 ## Cómo levantar el proyecto
@@ -67,6 +68,8 @@ docker compose up -d
 
 6. La aplicación queda en `http://localhost:8080`. Módulo admin: `http://localhost:8080/login` (`negocio1` / `negocio123`). SPA: ver carpeta `spa/` (`npm ci && npm run dev`).
 
+**Concurrencia:** dos clientes pueden reservar el mismo paquete casi al mismo tiempo y ambos leen el stock antes de que uno confirme; por eso `PaqueteSorpresa` usa `@Version` (bloqueo optimista) y un conflicto responde **409** para que el cliente reintente con datos frescos.
+
 ### Variables de entorno (producción — solo nombres)
 
 | Variable | Descripción |
@@ -78,6 +81,7 @@ docker compose up -d
 | `SAVORA_SEED_NEGOCIO_PASSWORD` | Contraseña inicial de usuarios negocio |
 | `SAVORA_SEED_CLIENTE_PASSWORD` | Contraseña inicial de `cliente1` |
 | `VITE_API_URL` | URL pública de la API (build de la SPA) |
+| `RENDER_DEPLOY_HOOK_API` / `RENDER_DEPLOY_HOOK_SPA` | Hooks de despliegue Render (solo GitHub Secrets del pipeline) |
 
 ## Endpoints de prueba
 
