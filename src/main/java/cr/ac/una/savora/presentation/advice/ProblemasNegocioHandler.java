@@ -9,7 +9,9 @@ import cr.ac.una.savora.business.excepcion.RecursoNoEncontradoException;
 import cr.ac.una.savora.business.excepcion.TransicionEstadoInvalidaException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import cr.ac.una.savora.config.RegistroEventosSeguridad;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -31,6 +33,12 @@ import java.util.Map;
 public class ProblemasNegocioHandler extends ResponseEntityExceptionHandler {
 
     private static final Logger log = LoggerFactory.getLogger(ProblemasNegocioHandler.class);
+
+    private final RegistroEventosSeguridad registroEventosSeguridad;
+
+    public ProblemasNegocioHandler(RegistroEventosSeguridad registroEventosSeguridad) {
+        this.registroEventosSeguridad = registroEventosSeguridad;
+    }
 
     @ExceptionHandler(RecursoNoEncontradoException.class)
     public ProblemDetail recursoNoEncontrado(RecursoNoEncontradoException ex) {
@@ -54,8 +62,19 @@ public class ProblemasNegocioHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(PropiedadRecursoException.class)
     public ProblemDetail propiedadRecurso(PropiedadRecursoException ex) {
+        registroEventosSeguridad.accesoDenegado("propiedad-recurso");
         ProblemDetail problema = ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, ex.getMessage());
         problema.setTitle("Acceso denegado");
+        return problema;
+    }
+
+    @ExceptionHandler(ObjectOptimisticLockingFailureException.class)
+    public ProblemDetail conflictoConcurrencia(ObjectOptimisticLockingFailureException ex) {
+        registroEventosSeguridad.conflictoConcurrencia(ex.getPersistentClassName());
+        ProblemDetail problema = ProblemDetail.forStatusAndDetail(
+                HttpStatus.CONFLICT,
+                "Otro usuario modificó el mismo paquete al mismo tiempo; intente de nuevo");
+        problema.setTitle("Conflicto de concurrencia");
         return problema;
     }
 
@@ -76,6 +95,7 @@ public class ProblemasNegocioHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(AccessDeniedException.class)
     public ProblemDetail accesoDenegado(AccessDeniedException ex) {
+        registroEventosSeguridad.accesoDenegado("api");
         ProblemDetail problema = ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, ex.getMessage());
         problema.setTitle("Acceso denegado");
         return problema;

@@ -9,6 +9,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
@@ -46,6 +47,10 @@ public class PaqueteSorpresa {
 
     @Column(nullable = false)
     private String estado;
+
+    @Version
+    @Column(nullable = false)
+    private Long version;
 
     protected PaqueteSorpresa() {
     }
@@ -135,5 +140,9 @@ public class PaqueteSorpresa {
 
     public void setEstado(String estado) {
         this.estado = estado;
+    }
+
+    public Long getVersion() {
+        return version;
     }
 }

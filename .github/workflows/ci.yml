@@ -1,4 +1,4 @@
-name: CI
+name: CI/CD
 
 on:
   push:
@@ -24,7 +24,7 @@ jobs:
       - name: Dar permisos a gradlew
         run: chmod +x ./gradlew
 
-      - name: Compilar y probar
+      - name: Compilar, probar y verificar cobertura
         run: ./gradlew build
 
   spa:
@@ -51,3 +51,29 @@ jobs:
         run: npm run build
         env:
           VITE_API_URL: https://ejemplo.invalid
+
+  deploy:
+    needs: [ api, spa ]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Desplegar API (Render)
+        env:
+          DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK_API }}
+        run: |
+          if [ -z "$DEPLOY_HOOK" ]; then
+            echo "RENDER_DEPLOY_HOOK_API no configurado; omitiendo despliegue de API."
+            exit 0
+          fi
+          curl -fsS -X POST "$DEPLOY_HOOK"
+
+      - name: Desplegar SPA (Render)
+        env:
+          DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK_SPA }}
+        run: |
+          if [ -z "$DEPLOY_HOOK" ]; then
+            echo "RENDER_DEPLOY_HOOK_SPA no configurado; omitiendo despliegue de SPA."
+            exit 0
+          fi
+          curl -fsS -X POST "$DEPLOY_HOOK"
