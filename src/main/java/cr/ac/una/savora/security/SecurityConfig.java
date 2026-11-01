@@ -17,6 +17,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import cr.ac.una.savora.config.RegistroEventosSeguridad;
 import org.springframework.web.cors.CorsConfigurationSource;
 
 import java.io.IOException;
@@ -28,10 +29,15 @@ public class SecurityConfig {
 
     private final JwtAuthFilter jwtAuthFilter;
     private final UsuarioDetailsService usuarioDetailsService;
+    private final RegistroEventosSeguridad registroEventosSeguridad;
 
-    public SecurityConfig(JwtAuthFilter jwtAuthFilter, UsuarioDetailsService usuarioDetailsService) {
+    public SecurityConfig(
+            JwtAuthFilter jwtAuthFilter,
+            UsuarioDetailsService usuarioDetailsService,
+            RegistroEventosSeguridad registroEventosSeguridad) {
         this.jwtAuthFilter = jwtAuthFilter;
         this.usuarioDetailsService = usuarioDetailsService;
+        this.registroEventosSeguridad = registroEventosSeguridad;
     }
 
     @Bean
@@ -99,12 +105,14 @@ public class SecurityConfig {
     private void noAutenticadoApi(
             HttpServletRequest request, HttpServletResponse response, AuthenticationException ex)
             throws IOException {
+        registroEventosSeguridad.accesoDenegado("no-autenticado-api");
         escribirProblemaJson(
                 response, HttpStatus.UNAUTHORIZED, "No autenticado", "Se requiere un token Bearer válido");
     }
 
     private void accesoDenegadoApi(HttpServletRequest request, HttpServletResponse response, AccessDeniedException ex)
             throws IOException {
+        registroEventosSeguridad.accesoDenegado("api-rol");
         escribirProblemaJson(
                 response,
                 HttpStatus.FORBIDDEN,
