@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext.jsx'
+import { Logo } from '../components/Iconos.jsx'
 
 export default function Login() {
   const { sesion, iniciarSesion } = useAuth()
@@ -29,15 +30,25 @@ export default function Login() {
 
   return (
     <main className="login">
-      <form className="tarjeta" onSubmit={enviar}>
+      <section className="login-portada">
+        <div className="login-marca">
+          <Logo tamano={44} />
+          <span>Savora</span>
+        </div>
+        <p className="etiqueta-seccion">Comida rica, planeta feliz</p>
         <h1>
-          Savora <span>rescata comida</span>
+          Rescata algo <span>delicioso</span> hoy.
         </h1>
-        <p className="sub">Inicie sesión para reservar paquetes sorpresa.</p>
+        <p className="sub">Paquetes sorpresa de tus negocios favoritos, a un precio que te va a encantar.</p>
+      </section>
+
+      <form className="tarjeta" onSubmit={enviar}>
+        <h2>Inicia sesión</h2>
+        <p className="sub">Para reservar tus paquetes sorpresa.</p>
 
         {ubicacion.state?.vencida && (
           <p className="alerta" role="alert">
-            Su sesión venció. Inicie sesión de nuevo.
+            Tu sesión venció. Inicia sesión de nuevo.
           </p>
         )}
         {error && (
