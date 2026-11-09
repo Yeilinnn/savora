@@ -6,6 +6,8 @@ const API_URL = (import.meta.env.VITE_API_URL || 'http://localhost:8080').replac
 const CLAVE_SESION = 'savora.sesion'
 
 export const EVENTO_NO_AUTORIZADO = 'savora:no-autorizado'
+// Se dispara cuando el cliente crea una reserva, para refrescar el contador del menú.
+export const EVENTO_RESERVAS_CAMBIARON = 'savora:reservas-cambiaron'
 
 export class ApiError extends Error {
   constructor(estado, problema) {
@@ -41,6 +43,24 @@ export function borrarSesion() {
     sessionStorage.removeItem(CLAVE_SESION)
   } catch {
     /* nada que borrar */
+  }
+}
+
+// El JWT que emite la API trae el claim "clienteId". Se lee aquí (sin verificar la firma, eso
+// lo hace el servidor en cada petición) para saber qué perfil consultar.
+export function clienteIdDeToken(token) {
+  try {
+    const carga = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')
+    const json = decodeURIComponent(
+      atob(carga)
+        .split('')
+        .map((c) => '%' + c.charCodeAt(0).toString(16).padStart(2, '0'))
+        .join(''),
+    )
+    const id = JSON.parse(json).clienteId
+    return id === undefined || id === null ? null : id
+  } catch {
+    return null
   }
 }
 
@@ -118,12 +138,24 @@ export const api = {
   reservar: (paqueteSorpresaId) =>
     solicitar('/api/v1/reservas', { metodo: 'POST', cuerpo: { paqueteSorpresaId } }),
 
-  listarReservas: async (pagina, tamano) => {
+  // estado es opcional: 'pendiente', 'recogido', etc.
+  listarReservas: async (pagina, tamano, estado) => {
     const consulta = new URLSearchParams({
       page: String(pagina),
       size: String(tamano),
       sort: 'fechaHoraReserva,desc',
     })
+    if (estado) consulta.set('estado', estado)
     return normalizarPagina(await solicitar(`/api/v1/reservas?${consulta}`))
   },
+
+  // Cantidad de reservas pendientes (para el contador del menú).
+  contarReservasPendientes: async () => {
+    const pagina = await api.listarReservas(0, 1, 'pendiente')
+    return pagina.totalElementos
+  },
+
+  obtenerCliente: (clienteId) => solicitar(`/api/v1/clientes/${clienteId}`),
+
+  perfilImpacto: (clienteId) => solicitar(`/api/v1/clientes/${clienteId}/perfil-impacto`),
 }

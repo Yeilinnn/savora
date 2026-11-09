@@ -1,11 +1,27 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { api, borrarSesion, EVENTO_NO_AUTORIZADO, guardarSesion, leerSesion } from '../api/client.js'
+import {
+  api,
+  borrarSesion,
+  clienteIdDeToken,
+  EVENTO_NO_AUTORIZADO,
+  guardarSesion,
+  leerSesion,
+} from '../api/client.js'
 
 const AuthContext = createContext(null)
 
+// Sesiones guardadas por versiones anteriores no traían clienteId: se completa desde el token.
+function sesionInicial() {
+  const guardada = leerSesion()
+  if (guardada && (guardada.clienteId === undefined || guardada.clienteId === null)) {
+    return { ...guardada, clienteId: clienteIdDeToken(guardada.token) }
+  }
+  return guardada
+}
+
 export function AuthProvider({ children }) {
-  const [sesion, setSesion] = useState(() => leerSesion())
+  const [sesion, setSesion] = useState(sesionInicial)
   const navegar = useNavigate()
 
   const cerrarSesion = useCallback(() => {
@@ -18,7 +34,12 @@ export function AuthProvider({ children }) {
     if (respuesta.rol !== 'CLIENTE') {
       throw new Error('Esta aplicación es para clientes. Los negocios usan el panel administrativo.')
     }
-    const nueva = { token: respuesta.token, rol: respuesta.rol, username }
+    const nueva = {
+      token: respuesta.token,
+      rol: respuesta.rol,
+      username,
+      clienteId: clienteIdDeToken(respuesta.token),
+    }
     guardarSesion(nueva)
     setSesion(nueva)
   }, [])
