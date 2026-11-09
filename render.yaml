@@ -1,12 +1,10 @@
-# Blueprint de Render: API (Docker) + SPA (sitio estático).
-# Los valores marcados "sync: false" se piden al crear el Blueprint y NO se guardan en el
-# repositorio. PostgreSQL (Neon) y MongoDB (Atlas) se crean aparte; ver docs/despliegue-lab6.md.
 services:
   - type: web
     name: savora-api
     runtime: docker
     plan: free
     dockerfilePath: ./Dockerfile
+    autoDeploy: false
     healthCheckPath: /actuator/health
     envVars:
       - key: SPRING_PROFILES_ACTIVE
@@ -32,6 +30,7 @@ services:
     name: savora-spa
     runtime: static
     rootDir: spa
+    autoDeploy: false
     buildCommand: npm ci && npm run build
     staticPublishPath: dist
     envVars:
