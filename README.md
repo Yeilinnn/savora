@@ -9,10 +9,13 @@ Cada cliente y cada negocio acumulan un historial de impacto (comida rescatada, 
 | Qué | Dirección |
 |---|---|
 | SPA (clientes y negocios) | <https://savora-spa.onrender.com> |
+| Inicio de sesión SPA | <https://savora-spa.onrender.com/#/login> |
 | API | <https://savora-api-ff0z.onrender.com> |
 | Swagger UI | <https://savora-api-ff0z.onrender.com/swagger-ui.html> |
-| Panel administrativo | <https://savora-api-ff0z.onrender.com/login> |
+| Panel administrativo (ADMIN) | <https://savora-api-ff0z.onrender.com/login> |
 | Salud | <https://savora-api-ff0z.onrender.com/actuator/health> |
+
+También figuran en [docs/despliegue-lab6.md](docs/despliegue-lab6.md) y [docs/diagrama-despliegue.md](docs/diagrama-despliegue.md).
 
 El plan gratuito de Render suspende los servicios tras 15 minutos sin tráfico; la primera petición tarda cerca de un minuto en despertarlos.
 

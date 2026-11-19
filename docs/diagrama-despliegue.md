@@ -6,8 +6,10 @@
 |---|---|
 | API | <https://savora-api-ff0z.onrender.com> |
 | SPA | <https://savora-spa.onrender.com> |
+| Inicio de sesión SPA | <https://savora-spa.onrender.com/#/login> |
 | Swagger UI | <https://savora-api-ff0z.onrender.com/swagger-ui.html> |
-| Panel administrativo | <https://savora-api-ff0z.onrender.com/login> |
+| Panel administrativo (ADMIN) | <https://savora-api-ff0z.onrender.com/login> |
+| Salud | <https://savora-api-ff0z.onrender.com/actuator/health> |
 
 El nombre del servicio de la API lleva el sufijo `-ff0z` porque Render lo agrega cuando el nombre ya está tomado.
 
