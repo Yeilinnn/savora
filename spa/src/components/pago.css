@@ -1,0 +1,40 @@
+.pago-fondo {
+  position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; padding: 16px;
+  background: rgba(23, 38, 31, 0.55);
+}
+.pago-caja {
+  width: 100%; max-width: 440px; max-height: 94vh; overflow-y: auto;
+  background: #fff; border-radius: 24px; padding: 24px; box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+}
+.pago-caja h2 { font-size: 1.25rem; font-weight: 800; }
+.pago-resumen {
+  background: var(--crema); border: 1px solid var(--borde); border-radius: 14px; padding: 8px 14px; margin: 12px 0 4px;
+}
+.pago-linea { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 8px 0; }
+.pago-linea + .pago-linea { border-top: 1px solid var(--borde); }
+.pago-linea small { display: block; color: var(--gris); }
+.pago-linea .precio { font-size: 1rem; white-space: nowrap; }
+.pago-total { font-weight: 800; }
+.pago-total strong { color: var(--verde-oscuro); font-size: 1.2rem; }
+.pago-aviso {
+  font-size: .82rem; color: var(--gris); background: #fff0cc; border-radius: 12px; padding: 10px 12px; margin: 10px 0 0;
+}
+.pago-fila { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.pago-acciones { display: grid; grid-template-columns: 1fr 1.6fr; gap: 10px; margin-top: 20px; }
+.pago-acciones button, .pago-acciones .enlace-boton { margin: 0; width: 100%; }
+.pago-vacio { text-align: center; color: var(--gris); padding: 18px 0; }
+.pago-quitar { min-height: 34px; padding: 4px 12px; font-size: .82rem; color: var(--error); border-color: #f0c9c5; }
+.pago-exito { text-align: center; }
+.pago-exito .pago-sello {
+  display: grid; place-items: center; width: 64px; height: 64px; margin: 0 auto 10px; border-radius: 50%;
+  background: var(--menta); color: var(--verde-oscuro); font-size: 2rem;
+}
+
+/* Botón del carrito en la barra superior */
+.barra-acciones { display: flex; align-items: center; gap: 12px; }
+.carrito-boton {
+  position: relative; display: grid; place-items: center; width: 44px; height: 44px; padding: 0;
+  border-radius: 50%; background: #fff; color: var(--tinta);
+}
+.carrito-boton svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.carrito-boton .contador { top: -4px; right: -4px; }
