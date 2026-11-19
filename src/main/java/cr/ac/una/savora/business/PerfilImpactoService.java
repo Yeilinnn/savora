@@ -8,7 +8,12 @@ import cr.ac.una.savora.data.PerfilImpactoRepository;
 import cr.ac.una.savora.data.TipoPropietario;
 import org.springframework.stereotype.Service;
 
+import java.time.Clock;
+import java.time.DayOfWeek;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.temporal.TemporalAdjusters;
 
 @Service
 public class PerfilImpactoService {
@@ -16,15 +21,21 @@ public class PerfilImpactoService {
     private static final int LIMITE_RESERVAS_BASE = 3;
     private static final int LIMITE_RESERVAS_CONFIABLE = 5;
     private static final int UMBRAL_RECOGIDAS_GUARDIAN = 10;
+    private static final int UMBRAL_RECOGIDAS_HEROE = 25;
     private static final double RATIO_MINIMO_CONFIABLE = 0.9;
 
     private static final int MINIMO_PAQUETES_CERO_DESPERDICIO = 10;
     private static final double RATIO_MINIMO_CERO_DESPERDICIO = 0.8;
 
-    private final PerfilImpactoRepository perfilImpactoRepository;
+    private static final int SEMANAS_PARA_INSIGNIA_DE_RACHA = 3;
+    private static final ZoneId ZONA_COSTA_RICA = ZoneId.of("America/Costa_Rica");
 
-    public PerfilImpactoService(PerfilImpactoRepository perfilImpactoRepository) {
+    private final PerfilImpactoRepository perfilImpactoRepository;
+    private final Clock clock;
+
+    public PerfilImpactoService(PerfilImpactoRepository perfilImpactoRepository, Clock clock) {
         this.perfilImpactoRepository = perfilImpactoRepository;
+        this.clock = clock;
     }
 
     public PerfilImpacto obtenerOCrear(String propietarioId, TipoPropietario tipoPropietario) {
@@ -44,7 +55,9 @@ public class PerfilImpactoService {
                 perfil.getPaquetesDonados(),
                 perfil.getPaquetesPerdidos(),
                 perfil.getInsignias().stream().map(i -> i.getCodigo().name()).toList(),
-                calcularLimiteReservas(perfil));
+                calcularLimiteReservas(perfil),
+                rachaVigente(perfil),
+                perfil.getMejorRachaSemanas());
     }
 
     public int calcularLimiteReservas(PerfilImpacto perfil) {
@@ -58,12 +71,21 @@ public class PerfilImpactoService {
         return esConfiable ? LIMITE_RESERVAS_CONFIABLE : LIMITE_RESERVAS_BASE;
     }
 
+    // ---- Clientes ----
+
     public PerfilImpacto registrarRecogida(String clienteId) {
         PerfilImpacto perfil = obtenerOCrear(clienteId, TipoPropietario.CLIENTE);
         perfil.setReservasRecogidas(perfil.getReservasRecogidas() + 1);
+        actualizarRacha(perfil);
         otorgarSiCorresponde(perfil, CodigoInsignia.PRIMER_RESCATE, perfil.getReservasRecogidas() >= 1);
         otorgarSiCorresponde(
                 perfil, CodigoInsignia.GUARDIAN_DEL_BARRIO, perfil.getReservasRecogidas() >= UMBRAL_RECOGIDAS_GUARDIAN);
+        otorgarSiCorresponde(
+                perfil, CodigoInsignia.HEROE_DEL_PLANETA, perfil.getReservasRecogidas() >= UMBRAL_RECOGIDAS_HEROE);
+        otorgarSiCorresponde(
+                perfil,
+                CodigoInsignia.RACHA_3_SEMANAS,
+                perfil.getMejorRachaSemanas() >= SEMANAS_PARA_INSIGNIA_DE_RACHA);
         return perfilImpactoRepository.save(perfil);
     }
 
@@ -73,9 +95,32 @@ public class PerfilImpactoService {
         return perfilImpactoRepository.save(perfil);
     }
 
+    // ---- Negocios ----
+
+    /** Un paquete del negocio fue recogido por un cliente: cuenta como venta y como actividad de la semana. */
+    public PerfilImpacto registrarVentaNegocio(String negocioId) {
+        PerfilImpacto perfil = obtenerOCrear(negocioId, TipoPropietario.NEGOCIO);
+        perfil.setReservasRecogidas(perfil.getReservasRecogidas() + 1);
+        actualizarRacha(perfil);
+        otorgarSiCorresponde(perfil, CodigoInsignia.PRIMERA_VENTA, perfil.getReservasRecogidas() >= 1);
+        otorgarSiCorresponde(
+                perfil,
+                CodigoInsignia.NEGOCIO_CONSTANTE,
+                perfil.getMejorRachaSemanas() >= SEMANAS_PARA_INSIGNIA_DE_RACHA);
+        return perfilImpactoRepository.save(perfil);
+    }
+
+    /** Un cliente no recogió un paquete reservado del negocio. */
+    public PerfilImpacto registrarNoRecogidaNegocio(String negocioId) {
+        PerfilImpacto perfil = obtenerOCrear(negocioId, TipoPropietario.NEGOCIO);
+        perfil.setReservasNoRecogidas(perfil.getReservasNoRecogidas() + 1);
+        return perfilImpactoRepository.save(perfil);
+    }
+
     public PerfilImpacto registrarDonacion(String negocioId) {
         PerfilImpacto perfil = obtenerOCrear(negocioId, TipoPropietario.NEGOCIO);
         perfil.setPaquetesDonados(perfil.getPaquetesDonados() + 1);
+        otorgarSiCorresponde(perfil, CodigoInsignia.PRIMERA_DONACION, perfil.getPaquetesDonados() >= 1);
         evaluarCeroDesperdicio(perfil);
         return perfilImpactoRepository.save(perfil);
     }
@@ -84,6 +129,40 @@ public class PerfilImpactoService {
         PerfilImpacto perfil = obtenerOCrear(negocioId, TipoPropietario.NEGOCIO);
         perfil.setPaquetesPerdidos(perfil.getPaquetesPerdidos() + 1);
         return perfilImpactoRepository.save(perfil);
+    }
+
+    // ---- Rachas semanales ----
+
+    /**
+     * Una racha son semanas (lunes a domingo, hora de Costa Rica) consecutivas con al menos una
+     * recogida. Varias recogidas en la misma semana cuentan una sola vez; si se salta una semana
+     * completa, la racha vuelve a empezar en 1.
+     */
+    private void actualizarRacha(PerfilImpacto perfil) {
+        LocalDate semana = lunesDeLaSemanaActual();
+        LocalDate ultima = perfil.getUltimaSemanaActiva() == null ? null : LocalDate.parse(perfil.getUltimaSemanaActiva());
+        if (semana.equals(ultima)) {
+            return;
+        }
+        int racha = (ultima != null && ultima.plusWeeks(1).equals(semana)) ? perfil.getRachaActualSemanas() + 1 : 1;
+        perfil.setRachaActualSemanas(racha);
+        perfil.setMejorRachaSemanas(Math.max(perfil.getMejorRachaSemanas(), racha));
+        perfil.setUltimaSemanaActiva(semana.toString());
+    }
+
+    /** La racha guardada solo sigue "viva" si hubo actividad esta semana o la anterior. */
+    private int rachaVigente(PerfilImpacto perfil) {
+        if (perfil.getUltimaSemanaActiva() == null) {
+            return 0;
+        }
+        LocalDate ultima = LocalDate.parse(perfil.getUltimaSemanaActiva());
+        LocalDate semana = lunesDeLaSemanaActual();
+        boolean viva = ultima.equals(semana) || ultima.plusWeeks(1).equals(semana);
+        return viva ? perfil.getRachaActualSemanas() : 0;
+    }
+
+    private LocalDate lunesDeLaSemanaActual() {
+        return LocalDate.now(clock.withZone(ZONA_COSTA_RICA)).with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
     }
 
     private void evaluarCeroDesperdicio(PerfilImpacto perfil) {
@@ -98,7 +177,7 @@ public class PerfilImpactoService {
     private void otorgarSiCorresponde(PerfilImpacto perfil, CodigoInsignia codigo, boolean cumpleCondicion) {
         boolean yaLaTiene = perfil.getInsignias().stream().anyMatch(i -> i.getCodigo() == codigo);
         if (cumpleCondicion && !yaLaTiene) {
-            perfil.getInsignias().add(new Insignia(codigo, Instant.now()));
+            perfil.getInsignias().add(new Insignia(codigo, Instant.now(clock)));
         }
     }
 }

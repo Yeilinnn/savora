@@ -22,6 +22,10 @@ public class PerfilImpacto {
     private int reservasNoRecogidas;
     private int paquetesDonados;
     private int paquetesPerdidos;
+    private int rachaActualSemanas;
+    private int mejorRachaSemanas;
+    // Lunes (ISO, yyyy-MM-dd) de la última semana en la que hubo actividad; null si nunca.
+    private String ultimaSemanaActiva;
     private List<Insignia> insignias = new ArrayList<>();
 
     public PerfilImpacto() {
@@ -94,6 +98,30 @@ public class PerfilImpacto {
 
     public void setPaquetesPerdidos(int paquetesPerdidos) {
         this.paquetesPerdidos = paquetesPerdidos;
+    }
+
+    public int getRachaActualSemanas() {
+        return rachaActualSemanas;
+    }
+
+    public void setRachaActualSemanas(int rachaActualSemanas) {
+        this.rachaActualSemanas = rachaActualSemanas;
+    }
+
+    public int getMejorRachaSemanas() {
+        return mejorRachaSemanas;
+    }
+
+    public void setMejorRachaSemanas(int mejorRachaSemanas) {
+        this.mejorRachaSemanas = mejorRachaSemanas;
+    }
+
+    public String getUltimaSemanaActiva() {
+        return ultimaSemanaActiva;
+    }
+
+    public void setUltimaSemanaActiva(String ultimaSemanaActiva) {
+        this.ultimaSemanaActiva = ultimaSemanaActiva;
     }
 
     public List<Insignia> getInsignias() {
