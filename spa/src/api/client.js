@@ -165,6 +165,8 @@ export const api = {
       page: String(pagina),
       size: String(tamano),
       sort: 'horaLimiteRecogida,asc',
+      // Negocios con buen historial de donación y buenas reseñas aparecen primero.
+      destacadosPrimero: 'true',
     })
     return normalizarPagina(await solicitar(`/api/v1/paquetes?${consulta}`))
   },
@@ -176,6 +178,19 @@ export const api = {
   // Carrito: paga (simulado) y reserva varios paquetes de una vez. Si algo falla no se reserva nada.
   pagarCarrito: (paqueteSorpresaIds, tarjeta) =>
     solicitar('/api/v1/reservas/carrito', { metodo: 'POST', cuerpo: { paqueteSorpresaIds, tarjeta } }),
+
+  // Reseñas: el cliente califica una reserva recogida (calificacion 1 a 5, comentario opcional).
+  calificarReserva: (reservaId, calificacion, comentario) =>
+    solicitar(`/api/v1/reservas/${reservaId}/resena`, { metodo: 'POST', cuerpo: { calificacion, comentario } }),
+
+  // Ids de las reservas que el cliente ya calificó.
+  reservasCalificadas: () => solicitar('/api/v1/reservas/calificadas'),
+
+  // Vista del negocio: sus propias reseñas y el promedio.
+  listarResenasNegocio: async (pagina, tamano) =>
+    normalizarPagina(await solicitar(`/api/v1/negocio/resenas?page=${pagina}&size=${tamano}`)),
+
+  resumenResenasNegocio: () => solicitar('/api/v1/negocio/resenas/resumen'),
 
   // estado es opcional: 'pendiente', 'recogido', etc.
   listarReservas: async (pagina, tamano, estado) => {

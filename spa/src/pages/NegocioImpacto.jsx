@@ -1,14 +1,21 @@
 import { useAuth } from '../auth/AuthContext.jsx'
 import { api } from '../api/client.js'
 import EstadoCarga from '../components/EstadoCarga.jsx'
+import Estrellas from '../components/Estrellas.jsx'
 import Icono from '../components/Iconos.jsx'
 import useCargar from '../components/useCargar.js'
 import { formatearKg } from '../components/Formato.js'
 import { INSIGNIAS_NEGOCIO, textoRacha } from '../components/insignias.js'
+import '../components/resenas.css'
 
 async function cargarImpacto(negocioId) {
-  const [negocio, perfil] = await Promise.all([api.obtenerNegocio(negocioId), api.perfilImpactoNegocio(negocioId)])
-  return { negocio, perfil }
+  const [negocio, perfil, resumenResenas, resenas] = await Promise.all([
+    api.obtenerNegocio(negocioId),
+    api.perfilImpactoNegocio(negocioId),
+    api.resumenResenasNegocio(),
+    api.listarResenasNegocio(0, 5),
+  ])
+  return { negocio, perfil, resumenResenas, resenas: resenas.contenido }
 }
 
 export default function NegocioImpacto() {
@@ -77,6 +84,31 @@ export default function NegocioImpacto() {
                 </div>
               </li>
             </ul>
+
+            <h2 className="titulo-lista">Reseñas de tus clientes</h2>
+            {datos.resumenResenas.total === 0 ? (
+              <p className="estado">Todavía no tienes reseñas. Aparecen cuando un cliente califica un paquete recogido.</p>
+            ) : (
+              <>
+                <p>
+                  <Estrellas valor={datos.resumenResenas.promedio} /> <strong>{datos.resumenResenas.promedio.toFixed(1)}</strong>{' '}
+                  de 5 ({datos.resumenResenas.total} {datos.resumenResenas.total === 1 ? 'reseña' : 'reseñas'})
+                </p>
+                <ul className="resena-lista">
+                  {datos.resenas.map((r) => (
+                    <li key={r.id} className="resena-item">
+                      <div className="resena-cabecera">
+                        <span>
+                          <Estrellas valor={r.calificacion} /> {r.nombreCliente}
+                        </span>
+                        <span>{new Date(r.fecha).toLocaleDateString('es-CR')}</span>
+                      </div>
+                      {r.comentario && <p>{r.comentario}</p>}
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
 
             <h2 className="titulo-lista">Insignias del negocio</h2>
             <ul className="insignias">

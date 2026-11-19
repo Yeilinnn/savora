@@ -59,7 +59,7 @@ El historial de impacto de cada negocio y cliente (kilogramos de comida rescatad
 
 `PerfilImpacto` está implementado (Laboratorio 2), con un sistema de insignias que además influye en reglas de negocio existentes: el límite de reservas activas de un cliente confiable sube, y un negocio con buen historial de donaciones gana mejor posicionamiento en el catálogo.
 
-`Reseña` está definida en el modelo — calificación, comentario y fecha, asociada a un cliente y a un paquete — pero todavía no tiene código (ni clase, ni repositorio, ni endpoint).
+`Reseña` está implementada (Paso 3 del proyecto final): un cliente califica de 1 a 5, con comentario opcional, una reserva suya ya recogida; solo se permite una reseña por reserva. El promedio se muestra en el catálogo y el negocio ve sus reseñas en su pantalla de impacto. El posicionamiento del negocio en el catálogo se calcula con el historial de donación (`PerfilImpacto`) y el promedio de reseñas.
 
 Modelo completo, criterios de diseño e insignias definidas en [`modelo-datos-lab2.md`](modelo-datos-lab2.md).
 

@@ -17,6 +17,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 
@@ -93,5 +94,36 @@ class AdminMvcIT {
                         .param("nombre", ""))
                 .andExpect(status().isOk())
                 .andExpect(view().name("admin/categorias/formulario"));
+    }
+
+    @Test
+    void elLoginSinTokenCsrfSeRechazaConForbidden() throws Exception {
+        mockMvc.perform(post("/login").param("username", "admin").param("password", "admin123"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void elLoginConTokenCsrfYClaveIncorrectaVuelveAlFormulario() throws Exception {
+        mockMvc.perform(post("/login")
+                        .with(csrf())
+                        .param("username", "admin")
+                        .param("password", "clave-incorrecta"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/login?error"));
+    }
+
+    @Test
+    void unaAccionDelPanelSinTokenCsrfSeRechazaConForbidden() throws Exception {
+        mockMvc.perform(post("/admin/categorias")
+                        .with(user("admin").roles("ADMIN"))
+                        .param("nombre", "Postres"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void unUsuarioSinRolAdminEsRedirigidoAlLoginConAviso() throws Exception {
+        mockMvc.perform(get("/admin/negocios").with(user("cliente1").roles("CLIENTE")))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/login?denegado"));
     }
 }

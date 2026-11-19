@@ -16,6 +16,7 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.csrf.CsrfException;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import cr.ac.una.savora.config.RegistroEventosSeguridad;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -116,7 +117,7 @@ public class SecurityConfig {
                         .permitAll())
                 .logout(logout -> logout.logoutUrl("/logout").logoutSuccessUrl("/login?logout").permitAll())
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
-                .exceptionHandling(eh -> eh.accessDeniedPage("/login?denegado"));
+                .exceptionHandling(eh -> eh.accessDeniedHandler(this::accesoDenegadoPanel));
         return http.build();
     }
 
@@ -136,6 +137,25 @@ public class SecurityConfig {
                 HttpStatus.FORBIDDEN,
                 "Acceso denegado",
                 "El usuario autenticado no tiene permiso para este recurso");
+    }
+
+    /**
+     * Panel administrativo. Una petición sin token CSRF válido se rechaza con 403 (no se reenvía a /login,
+     * porque un reenvío interno volvería a procesar las credenciales). Cualquier otro acceso denegado
+     * (por ejemplo un usuario sin rol ADMIN) se redirige a la pantalla de login con un aviso.
+     */
+    private void accesoDenegadoPanel(HttpServletRequest request, HttpServletResponse response, AccessDeniedException ex)
+            throws IOException {
+        if (ex instanceof CsrfException) {
+            registroEventosSeguridad.accesoDenegado("csrf-panel");
+            response.setStatus(HttpStatus.FORBIDDEN.value());
+            response.setCharacterEncoding(StandardCharsets.UTF_8.name());
+            response.setContentType(MediaType.TEXT_PLAIN_VALUE);
+            response.getWriter().write("Petición rechazada: falta el token CSRF o no es válido.");
+            return;
+        }
+        registroEventosSeguridad.accesoDenegado("panel-rol");
+        response.sendRedirect(request.getContextPath() + "/login?denegado");
     }
 
     private void escribirProblemaJson(HttpServletResponse response, HttpStatus estado, String titulo, String detalle)

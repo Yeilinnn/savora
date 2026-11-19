@@ -131,7 +131,7 @@ El historial no es solo informativo: alimenta reglas de negocio ya existentes.
 
 ## Reseña
 
-Segunda entidad del subdominio documental, definida en el modelo pero sin código todavía.
+Segunda entidad del subdominio documental. Implementada en la colección `resena` de MongoDB (clase `Resena`, `ResenaRepository`, `ResenaService`, `ResenaV1Controller`).
 
 **Qué es:** calificación que un cliente deja sobre un paquete que recogió.
 
@@ -148,15 +148,23 @@ Segunda entidad del subdominio documental, definida en el modelo pero sin códig
 ```json
 {
   "_id": "ObjectId",
-  "clienteId": "1",
-  "paqueteSorpresaId": "1",
+  "reservaId": 12,
+  "negocioId": 1,
+  "paqueteSorpresaId": 7,
+  "clienteId": 3,
+  "nombreCliente": "Ana",
   "calificacion": 5,
   "comentario": "Pan fresco, llegué justo antes de cerrar.",
-  "fecha": "2026-08-20T19:15:00Z"
+  "fecha": "2026-11-19T18:00:00Z"
 }
 ```
 
-**Estado:** entidad y estructura definidas; sin clase `@Document`, repositorio, servicio ni controller — queda para un laboratorio posterior.
+**Reglas:** solo el cliente dueño de la reserva puede calificar, solo si la reserva está `recogida`, y una reseña por reserva (índice único sobre `reservaId`; si dos solicitudes llegan a la vez, Mongo decide y la segunda responde 409). Se guarda el `negocioId` dentro del documento para leer reseñas y promedios sin tocar PostgreSQL.
+
+**Posicionamiento y kg:** un negocio es "destacado" si tiene al menos una donación y dona el 80 % o más de sus paquetes sobrantes; el catálogo ordena primero a los destacados y luego por promedio de reseñas. Los `kgRescatados` suben al marcar una recogida (1 kg por paquete, en el perfil del cliente y del negocio) y al donar un paquete (su cantidad). Es una convención del dominio (1 unidad = 1 kg), no un peso medido.
+
+**Consistencia:** Mongo queda fuera de la transacción de PostgreSQL; se acepta consistencia eventual.
+
 
 ## Cómo levantar las bases de datos
 

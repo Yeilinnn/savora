@@ -34,8 +34,9 @@ public class PaqueteSorpresaV1Controller {
             @RequestParam(required = false) String estado,
             @RequestParam(required = false) Long categoriaId,
             @RequestParam(required = false) Long negocioId,
+            @RequestParam(defaultValue = "false") boolean destacadosPrimero,
             Pageable pageable) {
-        return paqueteSorpresaAppService.listar(estado, categoriaId, negocioId, pageable);
+        return paqueteSorpresaAppService.listar(estado, categoriaId, negocioId, destacadosPrimero, pageable);
     }
 
     @GetMapping("/{id}")

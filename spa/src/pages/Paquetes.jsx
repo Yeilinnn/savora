@@ -7,6 +7,7 @@ import Paginacion from '../components/Paginacion.jsx'
 import usePagina from '../components/usePagina.js'
 import { visualDe } from '../components/categorias.js'
 import { formatearLimite, formatearMoneda, porcentajeDescuento } from '../components/Formato.js'
+import Estrellas from '../components/Estrellas.jsx'
 
 const TAMANO = 24
 
@@ -135,7 +136,20 @@ export default function Paquetes() {
                         <div className="paquete-cuerpo">
                           <span className="categoria">{p.nombreCategoria}</span>
                           <h3>{p.descripcion}</h3>
-                          <p className="negocio">{p.nombreNegocio}</p>
+                          <p className="negocio">
+                            {p.nombreNegocio}
+                            {p.negocioDestacado && (
+                              <span className="sello-destacado" title="Dona su excedente en vez de perderlo">
+                                ♻ Negocio solidario
+                              </span>
+                            )}
+                          </p>
+                          {p.totalResenas > 0 && (
+                            <p className="meta">
+                              <Estrellas valor={p.promedioResenas} /> {p.promedioResenas.toFixed(1)} ({p.totalResenas}{' '}
+                              {p.totalResenas === 1 ? 'reseña' : 'reseñas'})
+                            </p>
+                          )}
                           <p className="precios">
                             <span className="precio">{formatearMoneda(p.precioConDescuento)}</span>
                             <s className="tachado">{formatearMoneda(p.precioOriginal)}</s>

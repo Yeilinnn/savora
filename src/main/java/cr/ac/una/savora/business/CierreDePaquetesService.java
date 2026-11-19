@@ -12,6 +12,7 @@ import cr.ac.una.savora.data.OrganizacionComunitariaRepository;
 import cr.ac.una.savora.data.PaqueteSorpresa;
 import cr.ac.una.savora.data.PaqueteSorpresaEspecificaciones;
 import cr.ac.una.savora.data.PaqueteSorpresaRepository;
+import cr.ac.una.savora.data.TipoPropietario;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -111,6 +112,8 @@ public class CierreDePaquetesService {
         donacionRepository.save(
                 new Donacion(paquete, organizacion, ahora, ESTADO_DONACION_ACEPTADA));
         perfilImpactoService.registrarDonacion(String.valueOf(paquete.getNegocio().getId()));
+        perfilImpactoService.registrarKilogramos(
+                String.valueOf(paquete.getNegocio().getId()), TipoPropietario.NEGOCIO, kilogramos);
 
         int acumuladoNegocio = calcularKilogramosDonadosNegocio(paquete.getNegocio().getId());
 

@@ -14,5 +14,8 @@ public record PaqueteSorpresaResumen(
         BigDecimal precioOriginal,
         BigDecimal precioConDescuento,
         OffsetDateTime horaLimiteRecogida,
-        String estado) {
+        String estado,
+        boolean negocioDestacado,
+        Double promedioResenas,
+        int totalResenas) {
 }
