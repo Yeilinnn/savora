@@ -6,9 +6,10 @@
 |---|---|
 | API | <https://savora-api-ff0z.onrender.com> |
 | SPA (clientes y negocios) | <https://savora-spa.onrender.com> |
+| Inicio de sesión SPA | <https://savora-spa.onrender.com/#/login> |
 | Swagger UI | <https://savora-api-ff0z.onrender.com/swagger-ui.html> |
 | Salud | <https://savora-api-ff0z.onrender.com/actuator/health> |
-| Panel administrativo | <https://savora-api-ff0z.onrender.com/login> |
+| Panel administrativo (ADMIN) | <https://savora-api-ff0z.onrender.com/login> |
 
 Render agregó el sufijo `-ff0z` al nombre del servicio de la API porque `savora-api` ya estaba tomado.
 
@@ -72,11 +73,12 @@ Flyway crea las tablas y carga los datos de ejemplo la primera vez que arranca l
 
 ## 6. Qué entregar en el aula virtual
 
-- URL de la API, URL de la SPA y URL de Swagger UI (`…/swagger-ui.html`).
+- API: <https://savora-api-ff0z.onrender.com>, SPA: <https://savora-spa.onrender.com/#/login>, Swagger:
+  <https://savora-api-ff0z.onrender.com/swagger-ui.html>, panel ADMIN:
+  <https://savora-api-ff0z.onrender.com/login> (mismas direcciones en README y `docs/diagrama-despliegue.md`).
 - Credenciales de prueba, una por rol: `admin` (rol ADMIN, entra al panel `/login`), `negocio1` (rol
   NEGOCIO, entra a la SPA) y `cliente1` (rol CLIENTE, entra a la SPA), con las contraseñas que definió
   en Render.
-- Repositorio con las URLs reales ya anotadas en el README, aquí y en `docs/diagrama-despliegue.md`.
 
 ## 7. Revisar que no haya secretos en el historial
 
