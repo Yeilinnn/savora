@@ -2,6 +2,7 @@ package cr.ac.una.savora.business;
 
 import cr.ac.una.savora.business.dto.CrearPaqueteSorpresaSolicitud;
 import cr.ac.una.savora.business.dto.PaqueteSorpresaResumen;
+import cr.ac.una.savora.business.excepcion.CuentaNoHabilitadaException;
 import cr.ac.una.savora.business.excepcion.RecursoNoEncontradoException;
 import cr.ac.una.savora.data.Categoria;
 import cr.ac.una.savora.data.CategoriaRepository;
@@ -60,12 +61,16 @@ public class PaqueteSorpresaAppService {
     /**
      * El negocioId NUNCA se toma del cuerpo de la solicitud: viene del claim negocioId del JWT
      * autenticado, para que un negocio no pueda publicar paquetes a nombre de otro
-     * (mitigación de asignación masiva / BOLA — OWASP API1).
+     * (mitigación de asignación masiva / BOLA — OWASP API1). Además, el negocio debe estar
+     * aprobado por un administrador.
      */
     @Transactional
     public PaqueteSorpresaResumen crear(@Valid CrearPaqueteSorpresaSolicitud solicitud, Long negocioIdAutenticado) {
         Negocio negocio = negocioRepository.findById(negocioIdAutenticado)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Negocio", negocioIdAutenticado));
+        if (!negocio.estaAprobado()) {
+            throw new CuentaNoHabilitadaException("Su negocio no está habilitado para publicar paquetes");
+        }
         Categoria categoria = categoriaRepository.findById(solicitud.categoriaId())
                 .orElseThrow(() -> new RecursoNoEncontradoException("Categoria", solicitud.categoriaId()));
 

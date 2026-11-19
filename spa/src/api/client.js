@@ -2,7 +2,7 @@
 // Centraliza la URL base, el header Authorization, los errores Problem Details (RFC 9457)
 // y el manejo del 401 (token vencido o inválido).
 
-const API_URL = (import.meta.env.VITE_API_URL || 'http://localhost:8080').replace(/\/$/, '')
+export const API_URL = (import.meta.env.VITE_API_URL || 'http://localhost:8080').replace(/\/$/, '')
 const CLAVE_SESION = 'savora.sesion'
 
 export const EVENTO_NO_AUTORIZADO = 'savora:no-autorizado'
@@ -58,6 +58,22 @@ export function clienteIdDeToken(token) {
         .join(''),
     )
     const id = JSON.parse(json).clienteId
+    return id === undefined || id === null ? null : id
+  } catch {
+    return null
+  }
+}
+
+export function negocioIdDeToken(token) {
+  try {
+    const carga = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')
+    const json = decodeURIComponent(
+      atob(carga)
+        .split('')
+        .map((c) => '%' + c.charCodeAt(0).toString(16).padStart(2, '0'))
+        .join(''),
+    )
+    const id = JSON.parse(json).negocioId
     return id === undefined || id === null ? null : id
   } catch {
     return null
@@ -125,6 +141,24 @@ export const api = {
   login: (username, password) =>
     solicitar('/auth/login', { metodo: 'POST', cuerpo: { username, password }, conToken: false }),
 
+  // Registro de clientes nuevos: devuelve lo mismo que el login (token + rol).
+  registrar: (datos) => solicitar('/auth/registro', { metodo: 'POST', cuerpo: datos, conToken: false }),
+
+  // Registro de un negocio nuevo: queda pendiente hasta que un administrador lo apruebe.
+  registrarNegocio: (datos) =>
+    solicitar('/auth/registro-negocio', { metodo: 'POST', cuerpo: datos, conToken: false }),
+
+  // "Olvidé mi contraseña": la API siempre responde 202, exista o no el correo.
+  olvideContrasena: (correo) =>
+    solicitar('/auth/olvide-contrasena', { metodo: 'POST', cuerpo: { correo }, conToken: false }),
+
+  restablecerContrasena: (token, password) =>
+    solicitar('/auth/restablecer-contrasena', { metodo: 'POST', cuerpo: { token, password }, conToken: false }),
+
+  // Con la sesión abierta (cliente o negocio).
+  cambiarContrasena: (actual, nueva) =>
+    solicitar('/api/v1/cuenta/cambiar-contrasena', { metodo: 'POST', cuerpo: { actual, nueva } }),
+
   listarPaquetes: async (pagina, tamano) => {
     const consulta = new URLSearchParams({
       estado: 'disponible',
@@ -158,4 +192,40 @@ export const api = {
   obtenerCliente: (clienteId) => solicitar(`/api/v1/clientes/${clienteId}`),
 
   perfilImpacto: (clienteId) => solicitar(`/api/v1/clientes/${clienteId}/perfil-impacto`),
+
+  // --- Vista del negocio ---
+  listarCategorias: async () => (await solicitar('/api/v1/categorias?size=100&sort=nombre,asc')).content ?? [],
+
+  // Todos los paquetes del negocio (cualquier estado), los más recientes primero.
+  listarPaquetesNegocio: (negocioId) => async (pagina, tamano) => {
+    const consulta = new URLSearchParams({
+      negocioId: String(negocioId),
+      page: String(pagina),
+      size: String(tamano),
+      sort: 'horaLimiteRecogida,desc',
+    })
+    return normalizarPagina(await solicitar(`/api/v1/paquetes?${consulta}`))
+  },
+
+  crearPaquete: (datos) => solicitar('/api/v1/paquetes', { metodo: 'POST', cuerpo: datos }),
+
+  cerrarPaquete: (id) => solicitar(`/api/v1/paquetes/${id}/cierre`, { metodo: 'POST' }),
+
+  listarReservasNegocio: async (pagina, tamano, estado) => {
+    const consulta = new URLSearchParams({
+      page: String(pagina),
+      size: String(tamano),
+      sort: 'fechaHoraReserva,desc',
+    })
+    if (estado) consulta.set('estado', estado)
+    return normalizarPagina(await solicitar(`/api/v1/negocio/reservas?${consulta}`))
+  },
+
+  marcarRecogida: (reservaId) => solicitar(`/api/v1/negocio/reservas/${reservaId}/recogida`, { metodo: 'POST' }),
+
+  marcarNoRecogida: (reservaId) => solicitar(`/api/v1/negocio/reservas/${reservaId}/no-recogida`, { metodo: 'POST' }),
+
+  obtenerNegocio: (negocioId) => solicitar(`/api/v1/negocios/${negocioId}`),
+
+  perfilImpactoNegocio: (negocioId) => solicitar(`/api/v1/negocios/${negocioId}/perfil-impacto`),
 }

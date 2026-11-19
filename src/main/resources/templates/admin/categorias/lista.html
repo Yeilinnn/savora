@@ -5,15 +5,27 @@
 <header th:replace="~{fragments/admin-layout :: cabecera}"></header>
 <main>
     <div class="card">
-        <h1>Categorías</h1>
+        <span class="etiqueta-seccion">Catálogos</span>
+        <h1>Categorías de <span>paquetes</span></h1>
+        <p class="sub">Tipos de comida que los negocios eligen al publicar un paquete sorpresa.</p>
+
         <p class="mensaje" th:if="${mensaje}" th:text="${mensaje}"></p>
-        <a class="btn" th:href="@{/admin/categorias/nueva}">Nueva categoría</a>
+
+        <div class="resumen">
+            <div class="dato">
+                <span>Total de categorías</span>
+                <strong th:text="${pagina.totalElements}">0</strong>
+            </div>
+        </div>
+
+        <a class="btn" th:href="@{/admin/categorias/nueva}">+ Nueva categoría</a>
+
         <table>
             <thead>
             <tr>
                 <th>Id</th>
                 <th>Nombre</th>
-                <th></th>
+                <th>Acción</th>
             </tr>
             </thead>
             <tbody>
@@ -24,12 +36,13 @@
             </tr>
             </tbody>
         </table>
+
         <div class="paginacion">
-            <span th:text="'Página ' + (${pagina.number} + 1) + ' de ' + ${pagina.totalPages}"></span>
             <a th:if="${pagina.hasPrevious()}"
-               th:href="@{/admin/categorias(page=${pagina.number - 1},size=${pagina.size})}">Anterior</a>
+               th:href="@{/admin/categorias(page=${pagina.number - 1},size=${pagina.size})}">← Anterior</a>
+            <span th:text="'Página ' + (${pagina.number} + 1) + ' de ' + ${pagina.totalPages}"></span>
             <a th:if="${pagina.hasNext()}"
-               th:href="@{/admin/categorias(page=${pagina.number + 1},size=${pagina.size})}">Siguiente</a>
+               th:href="@{/admin/categorias(page=${pagina.number + 1},size=${pagina.size})}">Siguiente →</a>
         </div>
     </div>
 </main>

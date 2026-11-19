@@ -25,6 +25,14 @@ services:
         sync: false
       - key: SAVORA_SEED_CLIENTE_PASSWORD
         sync: false
+      - key: SAVORA_SEED_ADMIN_PASSWORD
+        sync: false
+      - key: SAVORA_SPA_URL
+        sync: false
+      - key: SAVORA_RESEND_API_KEY
+        sync: false
+      - key: SAVORA_MAIL_FROM
+        sync: false
 
   - type: web
     name: savora-spa

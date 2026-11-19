@@ -17,6 +17,30 @@ public class RegistroEventosSeguridad {
         log.warn("evento=acceso_denegado contexto={}", contexto);
     }
 
+    public void registroCliente(String usuario) {
+        log.info("evento=registro_cliente usuario={}", sanitizar(usuario));
+    }
+
+    public void negocioRegistrado(String usuario) {
+        log.info("evento=registro_negocio usuario={}", sanitizar(usuario));
+    }
+
+    public void adminAccion(String administrador, String accion, String objetivo) {
+        log.info(
+                "evento=admin_accion admin={} accion={} objetivo={}",
+                sanitizar(administrador),
+                sanitizar(accion),
+                sanitizar(objetivo));
+    }
+
+    public void restablecimientoSolicitado(String usuario) {
+        log.info("evento=restablecimiento_solicitado usuario={}", sanitizar(usuario));
+    }
+
+    public void contrasenaCambiada(String usuario, String via) {
+        log.info("evento=contrasena_cambiada usuario={} via={}", sanitizar(usuario), via);
+    }
+
     public void conflictoConcurrencia(String entidad) {
         log.warn("evento=conflicto_concurrencia entidad={}", entidad != null ? entidad : "desconocida");
     }
