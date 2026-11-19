@@ -21,7 +21,7 @@ import java.time.OffsetDateTime;
 /**
  * Casos de uso del negocio sobre las reservas de sus paquetes: consultarlas y marcarlas como
  * recogidas o no recogidas. Al cerrar el ciclo de una reserva se actualiza el PerfilImpacto
- * del cliente (Proceso 3 de la propuesta de dominio).
+ * del cliente y del negocio (Proceso 3 de la propuesta de dominio).
  */
 @Service
 public class GestionReservasNegocioService {
@@ -65,6 +65,7 @@ public class GestionReservasNegocioService {
         reservaRepository.save(reserva);
 
         perfilImpactoService.registrarRecogida(String.valueOf(reserva.getCliente().getId()));
+        perfilImpactoService.registrarVentaNegocio(String.valueOf(paquete.getNegocio().getId()));
         return aResumen(reserva);
     }
 
@@ -82,6 +83,7 @@ public class GestionReservasNegocioService {
         reservaRepository.save(reserva);
 
         perfilImpactoService.registrarNoRecogida(String.valueOf(reserva.getCliente().getId()));
+        perfilImpactoService.registrarNoRecogidaNegocio(String.valueOf(paquete.getNegocio().getId()));
         return aResumen(reserva);
     }
 

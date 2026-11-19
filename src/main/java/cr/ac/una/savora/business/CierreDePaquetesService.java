@@ -13,6 +13,8 @@ import cr.ac.una.savora.data.PaqueteSorpresa;
 import cr.ac.una.savora.data.PaqueteSorpresaEspecificaciones;
 import cr.ac.una.savora.data.PaqueteSorpresaRepository;
 import jakarta.validation.Valid;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,6 +30,8 @@ import java.util.List;
 @Validated
 public class CierreDePaquetesService {
 
+    private static final Logger log = LoggerFactory.getLogger(CierreDePaquetesService.class);
+
     private static final String RESULTADO_DONADO = "DONADO";
     private static final String RESULTADO_PERDIDO = "PERDIDO";
     private static final String ESTADO_DONACION_ACEPTADA = "aceptada";
@@ -37,22 +41,26 @@ public class CierreDePaquetesService {
     private final PaqueteSorpresaRepository paqueteSorpresaRepository;
     private final OrganizacionComunitariaRepository organizacionComunitariaRepository;
     private final DonacionRepository donacionRepository;
+    private final PerfilImpactoService perfilImpactoService;
     private final Clock clock;
 
     public CierreDePaquetesService(
             PaqueteSorpresaRepository paqueteSorpresaRepository,
             OrganizacionComunitariaRepository organizacionComunitariaRepository,
             DonacionRepository donacionRepository,
+            PerfilImpactoService perfilImpactoService,
             Clock clock) {
         this.paqueteSorpresaRepository = paqueteSorpresaRepository;
         this.organizacionComunitariaRepository = organizacionComunitariaRepository;
         this.donacionRepository = donacionRepository;
+        this.perfilImpactoService = perfilImpactoService;
         this.clock = clock;
     }
 
     /**
      * Patrón Specification (Lab 3): compone filtros de negocio para localizar paquetes
      * disponibles cuya hora límite ya venció, antes de ejecutar el cierre uno a uno.
+     * Lo invoca el cierre automático programado.
      */
     @Transactional
     public List<CierreResumen> cerrarPaquetesVencidosDisponibles() {
@@ -60,10 +68,16 @@ public class CierreDePaquetesService {
         Specification<PaqueteSorpresa> spec = Specification.allOf(
                 PaqueteSorpresaEspecificaciones.conEstado(ESTADO_DISPONIBLE),
                 PaqueteSorpresaEspecificaciones.horaLimiteVencida(ahora));
-        return paqueteSorpresaRepository.findAll(spec).stream()
-                .map(paquete -> cerrar(
-                        new CerrarPaqueteRequest(paquete.getId()), paquete.getNegocio().getId()))
-                .toList();
+        List<CierreResumen> cierres = new ArrayList<>();
+        for (PaqueteSorpresa paquete : paqueteSorpresaRepository.findAll(spec)) {
+            try {
+                cierres.add(cerrar(new CerrarPaqueteRequest(paquete.getId()), paquete.getNegocio().getId()));
+            } catch (RuntimeException e) {
+                // Un paquete con problemas no debe impedir el cierre de los demás.
+                log.warn("No se pudo cerrar automáticamente el paquete {}: {}", paquete.getId(), e.getMessage());
+            }
+        }
+        return cierres;
     }
 
     @Transactional
@@ -83,6 +97,7 @@ public class CierreDePaquetesService {
         if (asignacion.organizacionAceptada() == null) {
             paquete.setEstado(EstadoPaquete.desde(paquete.getEstado()).transitarA(EstadoPaquete.PERDIDO));
             paqueteSorpresaRepository.save(paquete);
+            perfilImpactoService.registrarPerdida(String.valueOf(paquete.getNegocio().getId()));
             return new CierreResumen(
                     paquete.getId(), RESULTADO_PERDIDO, null, null, 0, 0, List.of());
         }
@@ -95,6 +110,7 @@ public class CierreDePaquetesService {
 
         donacionRepository.save(
                 new Donacion(paquete, organizacion, ahora, ESTADO_DONACION_ACEPTADA));
+        perfilImpactoService.registrarDonacion(String.valueOf(paquete.getNegocio().getId()));
 
         int acumuladoNegocio = calcularKilogramosDonadosNegocio(paquete.getNegocio().getId());
 

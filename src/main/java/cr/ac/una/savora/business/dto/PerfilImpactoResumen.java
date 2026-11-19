@@ -11,5 +11,7 @@ public record PerfilImpactoResumen(
         int paquetesDonados,
         int paquetesPerdidos,
         List<String> insignias,
-        int limiteReservasActivas) {
+        int limiteReservasActivas,
+        int rachaActualSemanas,
+        int mejorRachaSemanas) {
 }

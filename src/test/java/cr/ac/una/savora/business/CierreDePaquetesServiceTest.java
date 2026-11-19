@@ -47,6 +47,8 @@ class CierreDePaquetesServiceTest {
     OrganizacionComunitariaRepository organizacionComunitariaRepository;
     @Mock
     DonacionRepository donacionRepository;
+    @Mock
+    PerfilImpactoService perfilImpactoService;
 
     CierreDePaquetesService service;
 
@@ -55,7 +57,8 @@ class CierreDePaquetesServiceTest {
     @BeforeEach
     void setUp() {
         service = new CierreDePaquetesService(
-                paqueteSorpresaRepository, organizacionComunitariaRepository, donacionRepository, clock);
+                paqueteSorpresaRepository, organizacionComunitariaRepository, donacionRepository,
+                perfilImpactoService, clock);
     }
 
     private PaqueteSorpresa paquete(Long id, String estado, int cantidad) {
@@ -99,6 +102,8 @@ class CierreDePaquetesServiceTest {
         assertThat(resumen.organizacionesRechazadas()).containsExactly(2L);
         assertThat(paquete.getEstado()).isEqualTo("donado");
         verify(donacionRepository).save(any(Donacion.class));
+        verify(perfilImpactoService).registrarDonacion("2");
+        verify(perfilImpactoService, never()).registrarPerdida(any());
     }
 
     @Test
@@ -115,6 +120,8 @@ class CierreDePaquetesServiceTest {
         assertThat(resumen.resultado()).isEqualTo("PERDIDO");
         assertThat(paquete.getEstado()).isEqualTo("perdido");
         verify(donacionRepository, never()).save(any());
+        verify(perfilImpactoService).registrarPerdida("2");
+        verify(perfilImpactoService, never()).registrarDonacion(any());
     }
 
     @Test
@@ -169,5 +176,26 @@ class CierreDePaquetesServiceTest {
 
         assertThatThrownBy(() -> service.cerrar(new CerrarPaqueteRequest(4L), 2L))
                 .isInstanceOf(TransicionEstadoInvalidaException.class);
+    }
+
+    @Test
+    void elCierreAutomaticoCierraLosVencidosYSigueAunqueUnoFalle() {
+        PaqueteSorpresa bueno = paquete(4L, "disponible", 4);
+        PaqueteSorpresa malo = paquete(5L, "disponible", 4);
+        OrganizacionComunitaria org = organizacion(1L, "Comedor Esperanza", 20);
+
+        when(paqueteSorpresaRepository.findAll(any(Specification.class)))
+                .thenAnswer(inv -> List.of(malo, bueno));
+        when(paqueteSorpresaRepository.findById(5L)).thenReturn(Optional.empty());
+        when(paqueteSorpresaRepository.findById(4L)).thenReturn(Optional.of(bueno));
+        when(organizacionComunitariaRepository.findAll()).thenReturn(List.of(org));
+        when(paqueteSorpresaRepository.save(any(PaqueteSorpresa.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(donacionRepository.save(any(Donacion.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        List<CierreResumen> cierres = service.cerrarPaquetesVencidosDisponibles();
+
+        assertThat(cierres).hasSize(1);
+        assertThat(cierres.getFirst().paqueteSorpresaId()).isEqualTo(4L);
+        verify(perfilImpactoService).registrarDonacion("2");
     }
 }

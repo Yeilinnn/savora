@@ -4,16 +4,7 @@ import EstadoCarga from '../components/EstadoCarga.jsx'
 import Icono from '../components/Iconos.jsx'
 import useCargar from '../components/useCargar.js'
 import { formatearKg } from '../components/Formato.js'
-
-// Insignias de negocio (códigos de CodigoInsignia del backend).
-const INSIGNIAS_NEGOCIO = [
-  {
-    codigo: 'CERO_DESPERDICIO',
-    nombre: 'Cero desperdicio',
-    descripcion: 'Al menos 10 paquetes cerrados y 80 % o más donados en lugar de perdidos.',
-    emoji: '♻️',
-  },
-]
+import { INSIGNIAS_NEGOCIO, textoRacha } from '../components/insignias.js'
 
 async function cargarImpacto(negocioId) {
   const [negocio, perfil] = await Promise.all([api.obtenerNegocio(negocioId), api.perfilImpactoNegocio(negocioId)])
@@ -69,6 +60,21 @@ export default function NegocioImpacto() {
                 <Icono nombre="hoja" />
                 <strong>{formatearKg(datos.perfil.kilogramosRescatados)}</strong>
                 <span>de comida salvada</span>
+              </li>
+            </ul>
+
+            <h2 className="titulo-lista">Racha del negocio</h2>
+            <ul className="insignias">
+              <li className={`insignia ${datos.perfil.rachaActualSemanas > 0 ? 'lograda' : 'bloqueada'}`}>
+                <span className="insignia-emoji" aria-hidden="true">
+                  🔥
+                </span>
+                <div>
+                  <h3>
+                    {datos.perfil.rachaActualSemanas} {datos.perfil.rachaActualSemanas === 1 ? 'semana' : 'semanas'} seguidas
+                  </h3>
+                  <p>{textoRacha(datos.perfil.rachaActualSemanas, datos.perfil.mejorRachaSemanas, true)}</p>
+                </div>
               </li>
             </ul>
 

@@ -3,7 +3,7 @@ import { api } from '../api/client.js'
 import EstadoCarga from '../components/EstadoCarga.jsx'
 import Icono from '../components/Iconos.jsx'
 import useCargar from '../components/useCargar.js'
-import { INSIGNIAS } from '../components/insignias.js'
+import { INSIGNIAS, textoRacha } from '../components/insignias.js'
 import { ahorroDeReserva, formatearKg, formatearMoneda } from '../components/Formato.js'
 
 async function cargarImpacto(clienteId) {
@@ -71,6 +71,21 @@ export default function Impacto() {
                 <Icono nombre="reloj" />
                 <strong>{datos.perfil.limiteReservasActivas}</strong>
                 <span>reservas activas permitidas</span>
+              </li>
+            </ul>
+
+            <h2 className="titulo-lista">Mi racha</h2>
+            <ul className="insignias">
+              <li className={`insignia ${datos.perfil.rachaActualSemanas > 0 ? 'lograda' : 'bloqueada'}`}>
+                <span className="insignia-emoji" aria-hidden="true">
+                  🔥
+                </span>
+                <div>
+                  <h3>
+                    {datos.perfil.rachaActualSemanas} {datos.perfil.rachaActualSemanas === 1 ? 'semana' : 'semanas'} seguidas
+                  </h3>
+                  <p>{textoRacha(datos.perfil.rachaActualSemanas, datos.perfil.mejorRachaSemanas, false)}</p>
+                </div>
               </li>
             </ul>
 
