@@ -2,6 +2,8 @@ import { useCallback, useEffect, useState } from 'react'
 import { Link, NavLink, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { api, EVENTO_RESERVAS_CAMBIARON } from './api/client.js'
 import { useAuth } from './auth/AuthContext.jsx'
+import { useCarrito } from './carrito/CarritoContext.jsx'
+import Carrito from './components/Carrito.jsx'
 import Icono, { Logo } from './components/Iconos.jsx'
 import Impacto from './pages/Impacto.jsx'
 import Login from './pages/Login.jsx'
@@ -29,6 +31,7 @@ function Diseno({ children }) {
   const ubicacion = useLocation()
   const [pendientes, setPendientes] = useState(0)
   const negocio = ES_NEGOCIO(sesion)
+  const { items, abrir } = useCarrito()
 
   const refrescar = useCallback(() => {
     // Cliente: sus reservas pendientes. Negocio: reservas recibidas por entregar.
@@ -84,11 +87,29 @@ function Diseno({ children }) {
             </NavLink>
           ))}
         </nav>
-        <Link to="/perfil" className="avatar" aria-label={negocio ? 'Mi negocio' : 'Mi perfil'}>
-          {sesion.username.charAt(0).toUpperCase()}
-        </Link>
+        <div className="barra-acciones">
+          {!negocio && (
+            <button
+              type="button"
+              className="carrito-boton"
+              onClick={abrir}
+              aria-label={`Abrir carrito, ${items.length} paquetes`}
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <circle cx="9" cy="20" r="1.4" />
+                <circle cx="18" cy="20" r="1.4" />
+                <path d="M3 4h2.2l2.2 11h10.2l2-8H6.4" />
+              </svg>
+              {items.length > 0 && <span className="contador">{items.length}</span>}
+            </button>
+          )}
+          <Link to="/perfil" className="avatar" aria-label={negocio ? 'Mi negocio' : 'Mi perfil'}>
+            {sesion.username.charAt(0).toUpperCase()}
+          </Link>
+        </div>
       </header>
       <main className="contenido">{children}</main>
+      {!negocio && <Carrito />}
     </>
   )
 }

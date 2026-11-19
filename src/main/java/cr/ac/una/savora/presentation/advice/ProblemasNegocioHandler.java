@@ -5,6 +5,7 @@ import cr.ac.una.savora.business.excepcion.CierreAntesDeHoraLimiteException;
 import cr.ac.una.savora.business.excepcion.CuentaNoHabilitadaException;
 import cr.ac.una.savora.business.excepcion.HoraLimiteSuperadaException;
 import cr.ac.una.savora.business.excepcion.LimiteReservasActivasException;
+import cr.ac.una.savora.business.excepcion.PagoRechazadoException;
 import cr.ac.una.savora.business.excepcion.PropiedadRecursoException;
 import cr.ac.una.savora.business.excepcion.RecursoNoEncontradoException;
 import cr.ac.una.savora.business.excepcion.ReservaNoPendienteException;
@@ -62,6 +63,14 @@ public class ProblemasNegocioHandler extends ResponseEntityExceptionHandler {
     public ProblemDetail reglaDeNegocio(RuntimeException ex) {
         ProblemDetail problema = ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_ENTITY, ex.getMessage());
         problema.setTitle("Regla de negocio incumplida");
+        return problema;
+    }
+
+    @ExceptionHandler(PagoRechazadoException.class)
+    public ProblemDetail pagoRechazado(PagoRechazadoException ex) {
+        ProblemDetail problema = ProblemDetail.forStatusAndDetail(
+                HttpStatus.UNPROCESSABLE_ENTITY, "Pago rechazado: " + ex.getMessage());
+        problema.setTitle("Pago rechazado");
         return problema;
     }
 

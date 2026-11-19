@@ -1,5 +1,6 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { api, EVENTO_RESERVAS_CAMBIARON } from '../api/client.js'
+import { useCarrito } from '../carrito/CarritoContext.jsx'
 import EstadoCarga from '../components/EstadoCarga.jsx'
 import Icono from '../components/Iconos.jsx'
 import Paginacion from '../components/Paginacion.jsx'
@@ -9,24 +10,16 @@ import { formatearLimite, formatearMoneda, porcentajeDescuento } from '../compon
 
 const TAMANO = 24
 
-function mensajeDeError(e) {
-  if (e.estado === 422) return `No se pudo reservar: ${e.message}`
-  if (e.estado === 404) return 'El paquete ya no existe.'
-  if (e.estado === 403) return 'Tu cuenta no puede realizar reservas.'
-  return e.message
-}
-
 function sinTildes(texto) {
   return (texto || '')
     .toLowerCase()
     .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[̀-ͯ]/g, '')
 }
 
 export default function Paquetes() {
   const { estado, pagina, error, irAPagina, reintentar } = usePagina(api.listarPaquetes, TAMANO)
-  const [reservando, setReservando] = useState(null)
-  const [aviso, setAviso] = useState(null)
+  const { agregar, quitar, contiene, lleno } = useCarrito()
   const [categoria, setCategoria] = useState('Todo')
   const [buscando, setBuscando] = useState(false)
   const [texto, setTexto] = useState('')
@@ -45,20 +38,11 @@ export default function Paquetes() {
     })
   }, [pagina, categoria, texto])
 
-  async function reservar(paquete) {
-    setAviso(null)
-    setReservando(paquete.id)
-    try {
-      await api.reservar(paquete.id)
-      setAviso({ tipo: 'ok', texto: `¡Listo! Reservaste: ${paquete.descripcion}` })
-      window.dispatchEvent(new Event(EVENTO_RESERVAS_CAMBIARON))
-      reintentar()
-    } catch (e) {
-      setAviso({ tipo: 'error', texto: mensajeDeError(e) })
-    } finally {
-      setReservando(null)
-    }
-  }
+  // Cuando se paga un carrito, la lista se recarga para que no aparezcan paquetes ya reservados.
+  useEffect(() => {
+    window.addEventListener(EVENTO_RESERVAS_CAMBIARON, reintentar)
+    return () => window.removeEventListener(EVENTO_RESERVAS_CAMBIARON, reintentar)
+  }, [reintentar])
 
   function alternarBusqueda() {
     if (buscando) setTexto('')
@@ -106,12 +90,6 @@ export default function Paquetes() {
           aria-label="Buscar paquetes"
           autoFocus
         />
-      )}
-
-      {aviso && (
-        <p className={`alerta ${aviso.tipo === 'error' ? 'error' : 'ok'}`} role="status">
-          {aviso.texto}
-        </p>
       )}
 
       <EstadoCarga estado={estado} error={error} alReintentar={reintentar}>
@@ -170,11 +148,11 @@ export default function Paquetes() {
                           </p>
                           <button
                             type="button"
-                            className="primario"
-                            onClick={() => reservar(p)}
-                            disabled={reservando !== null}
+                            className={contiene(p.id) ? '' : 'primario'}
+                            onClick={() => (contiene(p.id) ? quitar(p.id) : agregar(p))}
+                            disabled={!contiene(p.id) && lleno}
                           >
-                            {reservando === p.id ? 'Reservando…' : 'Reservar'}
+                            {contiene(p.id) ? 'Quitar del carrito' : lleno ? 'Carrito lleno' : 'Agregar al carrito'}
                           </button>
                         </div>
                       </li>

@@ -169,8 +169,13 @@ export const api = {
     return normalizarPagina(await solicitar(`/api/v1/paquetes?${consulta}`))
   },
 
-  reservar: (paqueteSorpresaId) =>
-    solicitar('/api/v1/reservas', { metodo: 'POST', cuerpo: { paqueteSorpresaId } }),
+  // Pago simulado + reserva en un solo paso. tarjeta = { titular, numero, vencimiento, cvv }.
+  reservar: (paqueteSorpresaId, tarjeta) =>
+    solicitar('/api/v1/reservas', { metodo: 'POST', cuerpo: { paqueteSorpresaId, tarjeta } }),
+
+  // Carrito: paga (simulado) y reserva varios paquetes de una vez. Si algo falla no se reserva nada.
+  pagarCarrito: (paqueteSorpresaIds, tarjeta) =>
+    solicitar('/api/v1/reservas/carrito', { metodo: 'POST', cuerpo: { paqueteSorpresaIds, tarjeta } }),
 
   // estado es opcional: 'pendiente', 'recogido', etc.
   listarReservas: async (pagina, tamano, estado) => {
