@@ -1,0 +1,45 @@
+/* Estilos de registro, contraseñas y vista del negocio (se suman a styles.css). */
+select {
+  width: 100%; min-height: 46px; padding: 10px 12px; border: 1px solid var(--borde);
+  border-radius: 12px; font: inherit; background: #fff; color: var(--tinta);
+}
+select:focus { outline: 2px solid var(--verde); border-color: var(--verde); }
+
+.pie-formulario { margin-top: 16px; text-align: center; color: var(--gris); font-size: .92rem; }
+.pie-formulario a { color: var(--verde); font-weight: 700; }
+
+button.ancho { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; }
+button.chico { min-height: 36px; padding: 6px 14px; font-size: .85rem; border-radius: 10px; }
+button.chico.primario { color: #fff; }
+.acciones { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+.enlace-boton.secundario { background: #fff; color: var(--verde); border-color: var(--verde); margin-top: 16px; }
+
+.formulario-paquete { margin-top: 14px; }
+.fila-campos { display: grid; gap: 0 12px; grid-template-columns: 1fr; }
+.formulario-paquete button.primario { margin-top: 20px; width: 100%; }
+.alerta.separada, .lista-reservas.separada { margin-top: 16px; }
+
+.insignia-estado.estado-disponible { background: var(--menta); color: var(--verde-oscuro); }
+.insignia-estado.estado-reservado { background: #fff0cc; color: #8a5a00; }
+.insignia-estado.estado-donado { background: #dde8f7; color: #254a7c; }
+.insignia-estado.estado-perdido, .insignia-estado.estado-no_recogido, .insignia-estado.estado-agotado {
+  background: #fbe4e2; color: var(--error);
+}
+
+/* Campo de contraseña con botón ver/ocultar */
+.campo-clave { position: relative; }
+.campo-clave input { padding-right: 76px; }
+.ver-clave {
+  position: absolute; right: 6px; top: 50%; transform: translateY(-50%); min-height: 34px;
+  padding: 4px 12px; border: 0; border-radius: 10px; background: transparent; color: var(--verde);
+  font-weight: 700; font-size: .85rem; cursor: pointer;
+}
+.enlace-olvide { margin: 10px 0 0; text-align: right; font-size: .9rem; }
+.enlace-olvide a { color: var(--verde); font-weight: 700; }
+.cambiar-clave { margin-top: 16px; }
+.cambiar-clave .tarjeta { margin-top: 12px; }
+.cambiar-clave .enlace-boton.ancho { width: 100%; margin-top: 8px; }
+
+@media (min-width: 640px) {
+  .fila-campos { grid-template-columns: repeat(3, 1fr); }
+}

@@ -1,6 +1,8 @@
 import { useState } from 'react'
-import { Navigate, useLocation, useNavigate } from 'react-router-dom'
+import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
+import { API_URL } from '../api/client.js'
 import { useAuth } from '../auth/AuthContext.jsx'
+import CampoClave from '../components/CampoClave.jsx'
 import { Logo } from '../components/Iconos.jsx'
 
 export default function Login() {
@@ -44,11 +46,16 @@ export default function Login() {
 
       <form className="tarjeta" onSubmit={enviar}>
         <h2>Inicia sesión</h2>
-        <p className="sub">Para reservar tus paquetes sorpresa.</p>
+        <p className="sub">Clientes y negocios entran por aquí.</p>
 
         {ubicacion.state?.vencida && (
           <p className="alerta" role="alert">
             Tu sesión venció. Inicia sesión de nuevo.
+          </p>
+        )}
+        {ubicacion.state?.clave && (
+          <p className="alerta ok" role="status">
+            Contraseña actualizada. Ya puedes iniciar sesión.
           </p>
         )}
         {error && (
@@ -63,22 +70,37 @@ export default function Login() {
           value={username}
           onChange={(e) => setUsername(e.target.value)}
           autoComplete="username"
+          autoCapitalize="none"
           required
         />
 
         <label htmlFor="password">Contraseña</label>
-        <input
+        <CampoClave
           id="password"
-          type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           autoComplete="current-password"
-          required
         />
+
+        <p className="enlace-olvide">
+          <Link to="/olvide">¿Olvidó su contraseña?</Link>
+        </p>
 
         <button type="submit" className="primario" disabled={enviando}>
           {enviando ? 'Ingresando…' : 'Ingresar'}
         </button>
+
+        <p className="pie-formulario">
+          ¿Aún no tienes cuenta? <Link to="/registro">Crear cuenta de cliente</Link>
+        </p>
+        <p className="pie-formulario">
+          ¿Tiene un negocio? <Link to="/registro-negocio">Registre su negocio</Link>
+        </p>
+        <p className="pie-formulario">
+          <a href={`${API_URL}/login`} target="_blank" rel="noopener noreferrer">
+            Acceso administradores
+          </a>
+        </p>
       </form>
     </main>
   )

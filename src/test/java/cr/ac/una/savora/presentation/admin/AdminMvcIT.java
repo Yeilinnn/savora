@@ -12,6 +12,7 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -49,19 +50,45 @@ class AdminMvcIT {
     @Test
     void adminRequiereAutenticacion() throws Exception {
         mockMvc.perform(get("/admin/categorias")).andExpect(status().is3xxRedirection());
+        mockMvc.perform(get("/admin/negocios")).andExpect(status().is3xxRedirection());
+        mockMvc.perform(get("/admin/usuarios")).andExpect(status().is3xxRedirection());
     }
 
     @Test
-    void negocioAccedeAlListadoDeCategorias() throws Exception {
-        mockMvc.perform(get("/admin/categorias").with(user("negocio1").roles("NEGOCIO")))
+    void adminAccedeAlListadoDeCategorias() throws Exception {
+        mockMvc.perform(get("/admin/categorias").with(user("admin").roles("ADMIN")))
                 .andExpect(status().isOk())
                 .andExpect(view().name("admin/categorias/lista"));
     }
 
     @Test
+    void adminAccedeAlListadoDeNegociosYUsuarios() throws Exception {
+        mockMvc.perform(get("/admin/negocios").with(user("admin").roles("ADMIN")))
+                .andExpect(status().isOk())
+                .andExpect(view().name("admin/negocios/lista"));
+        mockMvc.perform(get("/admin/usuarios").with(user("admin").roles("ADMIN")))
+                .andExpect(status().isOk())
+                .andExpect(view().name("admin/usuarios/lista"));
+    }
+
+    @Test
+    void negocioYClienteNoPuedenEntrarAlPanel() throws Exception {
+        mockMvc.perform(get("/admin/negocios").with(user("negocio1").roles("NEGOCIO")))
+                .andExpect(result -> assertThat(result.getResponse().getStatus())
+                        .isNotEqualTo(200)
+                        .isGreaterThanOrEqualTo(300)
+                        .isLessThan(500));
+        mockMvc.perform(get("/admin/usuarios").with(user("cliente1").roles("CLIENTE")))
+                .andExpect(result -> assertThat(result.getResponse().getStatus())
+                        .isNotEqualTo(200)
+                        .isGreaterThanOrEqualTo(300)
+                        .isLessThan(500));
+    }
+
+    @Test
     void crearCategoriaInvalidaMuestraErrores() throws Exception {
         mockMvc.perform(post("/admin/categorias")
-                        .with(user("negocio1").roles("NEGOCIO"))
+                        .with(user("admin").roles("ADMIN"))
                         .with(csrf())
                         .param("nombre", ""))
                 .andExpect(status().isOk())

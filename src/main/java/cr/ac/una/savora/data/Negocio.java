@@ -13,6 +13,10 @@ import java.time.LocalTime;
 @Table(name = "negocio")
 public class Negocio {
 
+    public static final String PENDIENTE = "pendiente";
+    public static final String APROBADO = "aprobado";
+    public static final String SUSPENDIDO = "suspendido";
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -28,6 +32,9 @@ public class Negocio {
 
     @Column(name = "horario_cierre", nullable = false)
     private LocalTime horarioCierre;
+
+    @Column(nullable = false)
+    private String estado = APROBADO;
 
     protected Negocio() {
     }
@@ -73,5 +80,17 @@ public class Negocio {
 
     public void setHorarioCierre(LocalTime horarioCierre) {
         this.horarioCierre = horarioCierre;
+    }
+
+    public String getEstado() {
+        return estado;
+    }
+
+    public void setEstado(String estado) {
+        this.estado = estado;
+    }
+
+    public boolean estaAprobado() {
+        return APROBADO.equals(estado);
     }
 }

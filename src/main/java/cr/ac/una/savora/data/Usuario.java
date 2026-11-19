@@ -38,6 +38,9 @@ public class Usuario {
     @JoinColumn(name = "cliente_id")
     private Cliente cliente;
 
+    @Column(nullable = false)
+    private boolean activo = true;
+
     protected Usuario() {
     }
 
@@ -61,6 +64,10 @@ public class Usuario {
         return password;
     }
 
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
     public RolUsuario getRol() {
         return rol;
     }
@@ -71,5 +78,13 @@ public class Usuario {
 
     public Cliente getCliente() {
         return cliente;
+    }
+
+    public boolean isActivo() {
+        return activo;
+    }
+
+    public void setActivo(boolean activo) {
+        this.activo = activo;
     }
 }

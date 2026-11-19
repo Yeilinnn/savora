@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext.jsx'
 import { api } from '../api/client.js'
+import CambiarContrasena from '../components/CambiarContrasena.jsx'
 import EstadoCarga from '../components/EstadoCarga.jsx'
 import Icono from '../components/Iconos.jsx'
 import useCargar from '../components/useCargar.js'
@@ -75,6 +76,8 @@ export default function Perfil() {
           </>
         )}
       </EstadoCarga>
+
+      <CambiarContrasena />
 
       <button type="button" className="peligro" onClick={cerrarSesion}>
         <Icono nombre="salir" /> Cerrar sesión

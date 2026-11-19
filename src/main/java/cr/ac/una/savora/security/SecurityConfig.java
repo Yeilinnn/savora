@@ -27,6 +27,13 @@ import java.nio.charset.StandardCharsets;
 @EnableWebSecurity
 public class SecurityConfig {
 
+    private static final String[] RECURSOS_DE_ADMINISTRACION = {
+        "/api/v1/negocios/**",
+        "/api/v1/categorias/**",
+        "/api/v1/organizaciones-comunitarias/**",
+        "/api/v1/clientes/**"
+    };
+
     private final JwtAuthFilter jwtAuthFilter;
     private final UsuarioDetailsService usuarioDetailsService;
     private final RegistroEventosSeguridad registroEventosSeguridad;
@@ -55,10 +62,21 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/login").permitAll()
+                        .requestMatchers(
+                                "/auth/login",
+                                "/auth/registro",
+                                "/auth/registro-negocio",
+                                "/auth/olvide-contrasena",
+                                "/auth/restablecer-contrasena").permitAll()
+                        .requestMatchers("/api/v1/negocio/**").hasRole("NEGOCIO")
                         .requestMatchers("/api/v1/reservas/**").hasRole("CLIENTE")
                         .requestMatchers(HttpMethod.POST, "/api/v1/paquetes").hasRole("NEGOCIO")
                         .requestMatchers(HttpMethod.POST, "/api/v1/paquetes/*/cierre").hasRole("NEGOCIO")
+                        // Lectura de catálogos: cualquier sesión. Escritura: solo administración.
+                        .requestMatchers(HttpMethod.GET, "/api/v1/clientes").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, RECURSOS_DE_ADMINISTRACION).hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, RECURSOS_DE_ADMINISTRACION).hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, RECURSOS_DE_ADMINISTRACION).hasRole("ADMIN")
                         .anyRequest().authenticated())
                 .exceptionHandling(eh -> eh
                         .authenticationEntryPoint(this::noAutenticadoApi)
@@ -89,12 +107,12 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/css/**").permitAll()
                         .requestMatchers("/login").permitAll()
-                        .requestMatchers("/admin/**").hasRole("NEGOCIO")
+                        .requestMatchers("/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated())
                 .userDetailsService(usuarioDetailsService)
                 .formLogin(form -> form
                         .loginPage("/login")
-                        .defaultSuccessUrl("/admin/categorias", true)
+                        .defaultSuccessUrl("/admin/negocios", true)
                         .permitAll())
                 .logout(logout -> logout.logoutUrl("/logout").logoutSuccessUrl("/login?logout").permitAll())
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))

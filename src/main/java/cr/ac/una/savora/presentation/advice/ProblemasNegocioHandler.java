@@ -2,11 +2,15 @@ package cr.ac.una.savora.presentation.advice;
 
 import cr.ac.una.savora.business.excepcion.CantidadNoDisponibleException;
 import cr.ac.una.savora.business.excepcion.CierreAntesDeHoraLimiteException;
+import cr.ac.una.savora.business.excepcion.CuentaNoHabilitadaException;
 import cr.ac.una.savora.business.excepcion.HoraLimiteSuperadaException;
 import cr.ac.una.savora.business.excepcion.LimiteReservasActivasException;
 import cr.ac.una.savora.business.excepcion.PropiedadRecursoException;
 import cr.ac.una.savora.business.excepcion.RecursoNoEncontradoException;
+import cr.ac.una.savora.business.excepcion.ReservaNoPendienteException;
+import cr.ac.una.savora.business.excepcion.SolicitudCuentaInvalidaException;
 import cr.ac.una.savora.business.excepcion.TransicionEstadoInvalidaException;
+import cr.ac.una.savora.business.excepcion.UsuarioDuplicadoException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import cr.ac.una.savora.config.RegistroEventosSeguridad;
@@ -52,7 +56,8 @@ public class ProblemasNegocioHandler extends ResponseEntityExceptionHandler {
             LimiteReservasActivasException.class,
             CantidadNoDisponibleException.class,
             TransicionEstadoInvalidaException.class,
-            CierreAntesDeHoraLimiteException.class
+            CierreAntesDeHoraLimiteException.class,
+            ReservaNoPendienteException.class
     })
     public ProblemDetail reglaDeNegocio(RuntimeException ex) {
         ProblemDetail problema = ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_ENTITY, ex.getMessage());
@@ -68,6 +73,13 @@ public class ProblemasNegocioHandler extends ResponseEntityExceptionHandler {
         return problema;
     }
 
+    @ExceptionHandler(CuentaNoHabilitadaException.class)
+    public ProblemDetail cuentaNoHabilitada(CuentaNoHabilitadaException ex) {
+        ProblemDetail problema = ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, ex.getMessage());
+        problema.setTitle("Cuenta no habilitada");
+        return problema;
+    }
+
     @ExceptionHandler(ObjectOptimisticLockingFailureException.class)
     public ProblemDetail conflictoConcurrencia(ObjectOptimisticLockingFailureException ex) {
         registroEventosSeguridad.conflictoConcurrencia(ex.getPersistentClassName());
@@ -75,6 +87,20 @@ public class ProblemasNegocioHandler extends ResponseEntityExceptionHandler {
                 HttpStatus.CONFLICT,
                 "Otro usuario modificó el mismo paquete al mismo tiempo; intente de nuevo");
         problema.setTitle("Conflicto de concurrencia");
+        return problema;
+    }
+
+    @ExceptionHandler(UsuarioDuplicadoException.class)
+    public ProblemDetail usuarioDuplicado(UsuarioDuplicadoException ex) {
+        ProblemDetail problema = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
+        problema.setTitle("Registro duplicado");
+        return problema;
+    }
+
+    @ExceptionHandler(SolicitudCuentaInvalidaException.class)
+    public ProblemDetail solicitudCuentaInvalida(SolicitudCuentaInvalidaException ex) {
+        ProblemDetail problema = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
+        problema.setTitle("Solicitud inválida");
         return problema;
     }
 

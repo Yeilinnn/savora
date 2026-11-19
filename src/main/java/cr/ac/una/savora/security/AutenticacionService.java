@@ -2,6 +2,7 @@ package cr.ac.una.savora.security;
 
 import cr.ac.una.savora.business.dto.LoginRespuesta;
 import cr.ac.una.savora.business.dto.LoginSolicitud;
+import cr.ac.una.savora.business.excepcion.CuentaNoHabilitadaException;
 import cr.ac.una.savora.config.RegistroEventosSeguridad;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -40,6 +41,11 @@ public class AutenticacionService {
         if (!passwordEncoder.matches(solicitud.password(), principal.getPassword())) {
             registroEventosSeguridad.loginFallido(solicitud.username());
             throw new BadCredentialsException("Usuario o contraseña inválidos");
+        }
+        // Solo después de validar la contraseña se informa del estado de la cuenta.
+        if (!principal.isEnabled()) {
+            registroEventosSeguridad.loginFallido(solicitud.username());
+            throw new CuentaNoHabilitadaException(principal.getMotivoDeshabilitado());
         }
         String token = jwtService.generar(principal);
         return new LoginRespuesta(token, principal.getRol().name(), jwtService.vigenciaSegundos());

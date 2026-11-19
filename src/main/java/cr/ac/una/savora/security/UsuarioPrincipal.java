@@ -15,15 +15,31 @@ public class UsuarioPrincipal implements UserDetails {
     private final RolUsuario rol;
     private final Long negocioId;
     private final Long clienteId;
+    private final boolean habilitado;
+    private final String motivoDeshabilitado;
 
     public UsuarioPrincipal(
             Long usuarioId, String username, String password, RolUsuario rol, Long negocioId, Long clienteId) {
+        this(usuarioId, username, password, rol, negocioId, clienteId, true, null);
+    }
+
+    public UsuarioPrincipal(
+            Long usuarioId,
+            String username,
+            String password,
+            RolUsuario rol,
+            Long negocioId,
+            Long clienteId,
+            boolean habilitado,
+            String motivoDeshabilitado) {
         this.usuarioId = usuarioId;
         this.username = username;
         this.password = password;
         this.rol = rol;
         this.negocioId = negocioId;
         this.clienteId = clienteId;
+        this.habilitado = habilitado;
+        this.motivoDeshabilitado = motivoDeshabilitado;
     }
 
     public Long getUsuarioId() {
@@ -40,6 +56,10 @@ public class UsuarioPrincipal implements UserDetails {
 
     public Long getClienteId() {
         return clienteId;
+    }
+
+    public String getMotivoDeshabilitado() {
+        return motivoDeshabilitado;
     }
 
     @Override
@@ -74,6 +94,6 @@ public class UsuarioPrincipal implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return true;
+        return habilitado;
     }
 }
