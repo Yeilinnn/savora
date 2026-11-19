@@ -26,7 +26,10 @@ db.createCollection('perfil_impacto', {
             required: ['codigo', 'fechaObtenida'],
             properties: {
               codigo: {
-                enum: ['PRIMER_RESCATE', 'GUARDIAN_DEL_BARRIO', 'RACHA_3_SEMANAS', 'CERO_DESPERDICIO']
+                enum: [
+                  'PRIMER_RESCATE', 'GUARDIAN_DEL_BARRIO', 'RACHA_3_SEMANAS', 'HEROE_DEL_PLANETA',
+                  'PRIMERA_VENTA', 'PRIMERA_DONACION', 'NEGOCIO_CONSTANTE', 'CERO_DESPERDICIO'
+                ]
               },
               fechaObtenida: { bsonType: 'date' }
             }

@@ -9,6 +9,8 @@ import cr.ac.una.savora.business.excepcion.PagoRechazadoException;
 import cr.ac.una.savora.business.excepcion.PropiedadRecursoException;
 import cr.ac.una.savora.business.excepcion.RecursoNoEncontradoException;
 import cr.ac.una.savora.business.excepcion.ReservaNoPendienteException;
+import cr.ac.una.savora.business.excepcion.ResenaDuplicadaException;
+import cr.ac.una.savora.business.excepcion.ResenaNoPermitidaException;
 import cr.ac.una.savora.business.excepcion.SolicitudCuentaInvalidaException;
 import cr.ac.una.savora.business.excepcion.TransicionEstadoInvalidaException;
 import cr.ac.una.savora.business.excepcion.UsuarioDuplicadoException;
@@ -58,7 +60,8 @@ public class ProblemasNegocioHandler extends ResponseEntityExceptionHandler {
             CantidadNoDisponibleException.class,
             TransicionEstadoInvalidaException.class,
             CierreAntesDeHoraLimiteException.class,
-            ReservaNoPendienteException.class
+            ReservaNoPendienteException.class,
+            ResenaNoPermitidaException.class
     })
     public ProblemDetail reglaDeNegocio(RuntimeException ex) {
         ProblemDetail problema = ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_ENTITY, ex.getMessage());
@@ -99,6 +102,13 @@ public class ProblemasNegocioHandler extends ResponseEntityExceptionHandler {
         return problema;
     }
 
+    @ExceptionHandler(ResenaDuplicadaException.class)
+    public ProblemDetail resenaDuplicada(ResenaDuplicadaException ex) {
+        ProblemDetail problema = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
+        problema.setTitle("Reseña duplicada");
+        return problema;
+    }
+
     @ExceptionHandler(UsuarioDuplicadoException.class)
     public ProblemDetail usuarioDuplicado(UsuarioDuplicadoException ex) {
         ProblemDetail problema = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
@@ -113,8 +123,9 @@ public class ProblemasNegocioHandler extends ResponseEntityExceptionHandler {
         return problema;
     }
 
-    @ExceptionHandler(DataIntegrityViolationException.class)
+        @ExceptionHandler(DataIntegrityViolationException.class)
     public ProblemDetail conflictoIntegridad(DataIntegrityViolationException ex) {
+        log.warn("Conflicto de integridad: {}", ex.getMostSpecificCause().getMessage());
         ProblemDetail problema = ProblemDetail.forStatusAndDetail(
                 HttpStatus.CONFLICT, "Conflicto con datos existentes (p. ej. recurso duplicado)");
         problema.setTitle("Conflicto");

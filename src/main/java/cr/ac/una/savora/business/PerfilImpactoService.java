@@ -8,12 +8,16 @@ import cr.ac.una.savora.data.PerfilImpactoRepository;
 import cr.ac.una.savora.data.TipoPropietario;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.DayOfWeek;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.temporal.TemporalAdjusters;
+import java.util.Collection;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class PerfilImpactoService {
@@ -26,6 +30,10 @@ public class PerfilImpactoService {
 
     private static final int MINIMO_PAQUETES_CERO_DESPERDICIO = 10;
     private static final double RATIO_MINIMO_CERO_DESPERDICIO = 0.8;
+
+    // Un negocio sube en el catálogo si dona su excedente en vez de perderlo.
+    private static final int MINIMO_DONADOS_DESTACADO = 1;
+    private static final double RATIO_MINIMO_DESTACADO = 0.8;
 
     private static final int SEMANAS_PARA_INSIGNIA_DE_RACHA = 3;
     private static final ZoneId ZONA_COSTA_RICA = ZoneId.of("America/Costa_Rica");
@@ -129,6 +137,39 @@ public class PerfilImpactoService {
         PerfilImpacto perfil = obtenerOCrear(negocioId, TipoPropietario.NEGOCIO);
         perfil.setPaquetesPerdidos(perfil.getPaquetesPerdidos() + 1);
         return perfilImpactoRepository.save(perfil);
+    }
+
+    // ---- Kilogramos rescatados y posicionamiento ----
+
+    /**
+     * Suma kilogramos de comida rescatada al perfil. Convención del dominio: cada unidad de un
+     * paquete equivale a 1 kg (la misma que usa el cierre para las donaciones).
+     */
+    public PerfilImpacto registrarKilogramos(String propietarioId, TipoPropietario tipo, int kilogramos) {
+        PerfilImpacto perfil = obtenerOCrear(propietarioId, tipo);
+        perfil.setKgRescatados(perfil.getKgRescatados().add(BigDecimal.valueOf(kilogramos)));
+        return perfilImpactoRepository.save(perfil);
+    }
+
+    /**
+     * Negocios con buen historial de donación: al menos una donación y un 80 % o más de sus
+     * paquetes sobrantes donados (no perdidos). El catálogo los muestra primero.
+     */
+    public Set<Long> negociosDestacados(Collection<Long> negocioIds) {
+        if (negocioIds.isEmpty()) {
+            return Set.of();
+        }
+        Collection<String> ids = negocioIds.stream().map(String::valueOf).toList();
+        return perfilImpactoRepository.findByTipoPropietarioAndPropietarioIdIn(TipoPropietario.NEGOCIO, ids).stream()
+                .filter(PerfilImpactoService::esDestacado)
+                .map(p -> Long.valueOf(p.getPropietarioId()))
+                .collect(Collectors.toSet());
+    }
+
+    static boolean esDestacado(PerfilImpacto perfil) {
+        int total = perfil.getPaquetesDonados() + perfil.getPaquetesPerdidos();
+        return perfil.getPaquetesDonados() >= MINIMO_DONADOS_DESTACADO
+                && (double) perfil.getPaquetesDonados() / total >= RATIO_MINIMO_DESTACADO;
     }
 
     // ---- Rachas semanales ----

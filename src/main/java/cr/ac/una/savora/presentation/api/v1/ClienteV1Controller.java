@@ -3,11 +3,13 @@ package cr.ac.una.savora.presentation.api.v1;
 import cr.ac.una.savora.business.ClienteAppService;
 import cr.ac.una.savora.business.dto.ClienteResumen;
 import cr.ac.una.savora.business.dto.CrearClienteSolicitud;
+import cr.ac.una.savora.security.AccesoPropio;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -35,8 +37,10 @@ public class ClienteV1Controller {
         return clienteAppService.listar(pageable);
     }
 
+    /** Un cliente solo puede ver su propio registro; el administrador, cualquiera. */
     @GetMapping("/{id}")
-    public ClienteResumen obtener(@PathVariable Long id) {
+    public ClienteResumen obtener(@PathVariable Long id, Authentication autenticacion) {
+        AccesoPropio.exigirClienteOAdmin(id, autenticacion);
         return clienteAppService.obtenerPorId(id);
     }
 

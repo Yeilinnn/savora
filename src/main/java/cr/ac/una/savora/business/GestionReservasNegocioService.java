@@ -9,6 +9,7 @@ import cr.ac.una.savora.data.PaqueteSorpresa;
 import cr.ac.una.savora.data.Reserva;
 import cr.ac.una.savora.data.ReservaEspecificaciones;
 import cr.ac.una.savora.data.ReservaRepository;
+import cr.ac.una.savora.data.TipoPropietario;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -66,6 +67,11 @@ public class GestionReservasNegocioService {
 
         perfilImpactoService.registrarRecogida(String.valueOf(reserva.getCliente().getId()));
         perfilImpactoService.registrarVentaNegocio(String.valueOf(paquete.getNegocio().getId()));
+        // Cada paquete recogido es 1 kg de comida que no se desperdició (cliente y negocio).
+        perfilImpactoService.registrarKilogramos(
+                String.valueOf(reserva.getCliente().getId()), TipoPropietario.CLIENTE, 1);
+        perfilImpactoService.registrarKilogramos(
+                String.valueOf(paquete.getNegocio().getId()), TipoPropietario.NEGOCIO, 1);
         return aResumen(reserva);
     }
 
